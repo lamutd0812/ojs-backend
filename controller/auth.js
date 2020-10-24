@@ -84,7 +84,7 @@ exports.signin = async (req, res) => {
                 firstname: loadedUser.firstname
             },
             config.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '12h' }
         );
         res.status(200).json({
             message: 'Đăng nhập thành công!',

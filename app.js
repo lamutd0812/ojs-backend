@@ -36,8 +36,6 @@ app.use('/submissions', submissionRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-console.log(config.DB_URI);
-
 mongoose.connect(config.DB_URI, {
     useUnifiedTopology: true,
     useNewUrlParser: true,
