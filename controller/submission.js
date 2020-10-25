@@ -29,6 +29,20 @@ exports.getSubmissionsByAuthor = async (req, res) => {
     }
 }
 
+exports.getSubmissionById = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    try {
+        const submission = await Submission.findById(submissionId)
+            .populate({ path: 'categoryId', select: 'name' })
+            .populate({ path: 'submissionStatus.stageId', select: 'name' }).exec();
+        res.status(200).json({ submission: submission });
+    } catch (err) {
+        res.status(500).json({
+            error: err
+        });
+    }
+}
+
 exports.createNewSubmission = async (req, res) => {
     // console.log(req.file);
     // console.log(req.user);
