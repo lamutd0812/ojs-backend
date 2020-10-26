@@ -31,7 +31,7 @@ const submissionSchema = new mongoose.Schema({
         required: true,
         ref: 'User'
     },
-    sectionEditorId: {
+    editorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
