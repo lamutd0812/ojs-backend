@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const { USER_ROLES } = require('../config/constant');
+const avatarGenerate = require('../services/avatar-generate');
 
 exports.signup = async (req, res) => {
     const username = req.body.username;
@@ -13,6 +14,7 @@ exports.signup = async (req, res) => {
     const lastname = req.body.lastname;
     const affiliation = req.body.affiliation;
     const biography = req.body.biography;
+    const toBeReviewer = req.body.toBeReviewer;
     try {
         const userCheck = await User.findOne({ username: username });
         const emailCheck = await User.findOne({ email: email });
@@ -29,10 +31,16 @@ exports.signup = async (req, res) => {
             }
         } else {
             const hashedPassword = await bcrypt.hash(password, 12);
-            let roles = [];
-            const reader_role = await UserRole.findOne(USER_ROLES.AUTHOR);
-            const reviewer_role = await UserRole.findOne(USER_ROLES.REVIEWER);
-            roles.push(reader_role, reviewer_role);
+            let role = null;
+            if (toBeReviewer) {
+                role = await UserRole.findOne(USER_ROLES.REVIEWER);
+            }
+            else {
+                role = await UserRole.findOne(USER_ROLES.AUTHOR);
+            }
+
+            const avatar = avatarGenerate(firstname, lastname);
+            console.log(avatar);
 
             const user = new User({
                 username: username,
@@ -42,7 +50,8 @@ exports.signup = async (req, res) => {
                 lastname: lastname,
                 affiliation: affiliation,
                 biography: biography,
-                roles: roles
+                avatar: avatar,
+                role: role
             });
 
             const newUser = await user.save();
@@ -64,7 +73,8 @@ exports.signin = async (req, res) => {
     const password = req.body.password;
     let loadedUser;
     try {
-        const user = await User.findOne({ username: username }).populate('roles');
+        const user = await User.findOne({ username: username })
+            .populate({ path: 'role', select: 'name permissionLevel -_id' });
         if (!user) {
             res.status(401).json({
                 error: 'Tài khoản không tồn tại!'
@@ -79,9 +89,9 @@ exports.signin = async (req, res) => {
         }
         const token = jwt.sign(
             {
-                email: loadedUser.email,
+                username: loadedUser.username,
                 userId: loadedUser._id.toString(),
-                firstname: loadedUser.firstname
+                role: loadedUser.role
             },
             config.JWT_SECRET,
             { expiresIn: '12h' }
@@ -90,7 +100,9 @@ exports.signin = async (req, res) => {
             message: 'Đăng nhập thành công!',
             token: token,
             userId: loadedUser._id.toString(),
-            firstname: loadedUser.firstname
+            fullname: loadedUser.firstname + ' ' + loadedUser.lastname,
+            avatar: loadedUser.avatar,
+            role: loadedUser.role
         })
     } catch (err) {
         res.status(500).json({

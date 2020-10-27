@@ -1,23 +1,23 @@
 exports.USER_ROLES = {
     ADMIN: {
         name: 'Admin',
-        value: 0
+        permissionLevel: 5
     },
     CHIEF_EDITOR: {
         name: 'Chief Editor',
-        value: 1
+        permissionLevel: 4
     },
     EDITOR: {
         name: 'Editor',
-        value: 2
+        permissionLevel: 3
     },
     REVIEWER: {
         name: 'Reviewer',
-        value: 3
+        permissionLevel: 2
     },
     AUTHOR: {
         name: 'Author',
-        value: 4
+        permissionLevel: 1
     }
 };
 

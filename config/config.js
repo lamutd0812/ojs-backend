@@ -6,5 +6,6 @@ module.exports = {
     'AWS_ACCESS_KEY': `${process.env.AWS_AccessKeyId}`,
     'AWS_SECRET_KEY': `${process.env.AWS_SecretKey}`,
     'AWS_S3_BUCKET_REGION': `${process.env.AWS_S3_Bucket_Region}`,
-    'AWS_S3_BUCKET_NAME': `${process.env.AWS_S3_Bucket_Name}`
+    'AWS_S3_BUCKET_NAME': `${process.env.AWS_S3_Bucket_Name}`,
+    'AWS_S3_BUCKET_NAME_IMAGES': `${process.env.AWS_S3_Bucket_Name_Images}`
 };
