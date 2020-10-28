@@ -20,8 +20,23 @@ exports.getSubmissionsByAuthor = async (req, res) => {
     const authorId = req.params.authorId;
     try {
         const submissions = await Submission.find({ authorId: authorId }).sort({ _id: -1 })
-            .populate({ path: 'submissionStatus.stageId', select: 'name' }).exec();
+            .populate({ path: 'submissionStatus.stageId', select: 'name value' }).exec();
         res.status(200).json({ submissions: submissions });
+    } catch (err) {
+        res.status(500).json({
+            error: err
+        });
+    }
+}
+
+exports.getSubmissionById = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    try {
+        const submission = await Submission.findById(submissionId)
+            .populate({ path: 'authorId', select: 'firstname lastname' })
+            .populate({ path: 'categoryId', select: 'name' })
+            .populate({ path: 'submissionStatus.stageId', select: 'name value' }).exec();
+        res.status(200).json({ submission: submission });
     } catch (err) {
         res.status(500).json({
             error: err

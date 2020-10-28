@@ -28,17 +28,17 @@ const userSchema = new mongoose.Schema({
     biography: {
         type: String
     },
-    profileImage: {
+    avatar: {
         type: String
     },
     isVerified: {
         type: Boolean
     },
-    roles: [{
+    role: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'UserRole'
-    }]
+    }
 }, {
     timestamps: true
 });

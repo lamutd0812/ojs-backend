@@ -5,10 +5,10 @@ const userRoleSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    value: {
+    permissionLevel: {
         type: Number,
         required: true
     }
 })
 
-module.exports = mongoose.model('UserRole', userRoleSchema);
+module.exports = mongoose.model('UserRole', userRoleSchema,'user_roles');
