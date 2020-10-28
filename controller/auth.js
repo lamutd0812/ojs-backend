@@ -31,16 +31,16 @@ exports.signup = async (req, res) => {
             }
         } else {
             const hashedPassword = await bcrypt.hash(password, 12);
-            let role = null;
-            if (toBeReviewer) {
-                role = await UserRole.findOne(USER_ROLES.REVIEWER);
-            }
-            else {
-                role = await UserRole.findOne(USER_ROLES.AUTHOR);
-            }
+            // let role = null;
+            // if (toBeReviewer) {
+            //     role = await UserRole.findOne(USER_ROLES.REVIEWER);
+            // }
+            // else {
+            //     role = await UserRole.findOne(USER_ROLES.AUTHOR);
+            // }
+            const role = toBeReviewer ? await UserRole.findOne(USER_ROLES.REVIEWER) : await UserRole.findOne(USER_ROLES.AUTHOR);
 
             const avatar = avatarGenerate(firstname, lastname);
-            console.log(avatar);
 
             const user = new User({
                 username: username,
