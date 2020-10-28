@@ -7,7 +7,9 @@ const { STAGE, SUBMISSION_STATUS } = require('../config/constant');
 
 exports.getAllSubmissions = async (req, res) => {
     try {
-        const submissions = await Submission.find();
+        const submissions = await Submission.find().sort({ _id: -1 })
+            .populate({ path: 'authorId', select: 'firstname lastname' })
+            .populate({ path: 'submissionStatus.stageId', select: 'name value' }).exec();;
         res.status(200).json({ submissions: submissions });
     } catch (err) {
         res.status(500).json({
