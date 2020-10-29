@@ -11,6 +11,7 @@ const roleRoutes = require('./routes/roles');
 const stageRoutes = require('./routes/stage');
 const categoryRoutes = require('./routes/category');
 const submissionRoutes = require('./routes/submission');
+const reviewProcessRoutes = require('./routes/reviewProcess');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/roles', roleRoutes);
 app.use('/stages', stageRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/submissions', submissionRoutes);
+app.use('/reviews/', reviewProcessRoutes);
 
 const PORT = process.env.PORT || 5000;
 

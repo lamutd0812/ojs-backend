@@ -1,8 +1,7 @@
 const Submission = require('../model/submission');
-const SubmissionStatus = require('../model/submission_status');
+// const SubmissionStatus = require('../model/submission_status');
 const Category = require('../model/category');
 const Stage = require('../model/stage');
-const config = require('../config/config');
 const { STAGE, SUBMISSION_STATUS } = require('../config/constant');
 
 exports.getAllSubmissions = async (req, res) => {
@@ -36,6 +35,7 @@ exports.getSubmissionById = async (req, res) => {
     try {
         const submission = await Submission.findById(submissionId)
             .populate({ path: 'authorId', select: 'firstname lastname' })
+            .populate({ path: 'editorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'submissionStatus.stageId', select: 'name value' }).exec();
         res.status(200).json({ submission: submission });

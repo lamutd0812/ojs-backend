@@ -41,5 +41,6 @@ exports.STAGE = {
 };
 
 exports.SUBMISSION_STATUS = {
-    AUTHOR_SUBMIT_SUCCESS: 'Đăng bài lên hệ thống thành công.'
+    AUTHOR_SUBMIT_SUCCESS: 'Đăng bài lên hệ thống thành công.',
+    ASSIGN_EDITOR_SUCCESS: 'Biên tập viên đã được chỉ định'
 };
