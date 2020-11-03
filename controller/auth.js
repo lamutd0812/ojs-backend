@@ -91,6 +91,7 @@ exports.signin = async (req, res) => {
             {
                 username: loadedUser.username,
                 userId: loadedUser._id.toString(),
+                fullname: loadedUser.firstname + ' ' + loadedUser.lastname,
                 role: loadedUser.role
             },
             config.JWT_SECRET,

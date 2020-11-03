@@ -1,0 +1,34 @@
+const mongoose = require('mongoose');
+
+const editrAssignmentSchema = new mongoose.Schema({
+    submissionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Submission'
+    },
+    editorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    },
+    dueDate: {
+        type: Date,
+        required: true
+    },
+    message: {
+        type: String
+    },
+    editorSubmissionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+        ref: 'EditorSubmission'
+    },
+    isAccepted: {
+        type: Boolean,
+        required: true
+    }
+}, {
+    timestamps: true
+});
+
+module.exports = mongoose.model('EditorAssignment', editrAssignmentSchema, 'editor_assignments');

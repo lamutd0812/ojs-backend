@@ -2,6 +2,7 @@ const User = require('../model/user');
 const UserRole = require('../model/user_role');
 const Submission = require('../model/submission');
 const Stage = require('../model/stage');
+const EditorAssignment = require('../model/editor_assignment');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS } = require('../config/constant');
 
 exports.getAllEditors = async (req, res) => {
@@ -19,13 +20,26 @@ exports.getAllEditors = async (req, res) => {
 exports.assignEditor = async (req, res) => {
     const submissionId = req.body.submissionId;
     const editorId = req.body.editorId;
+    const dueDate = req.body.dueDate;
+    const message = req.body.message;
     try {
         const submission = await Submission.findById(submissionId);
-        if (submission.editorId) {
+        const lastEditorAssignment = await EditorAssignment.findOne({
+            submissionId: submissionId,
+            editorId: editorId
+        });
+        if (lastEditorAssignment) {
             res.status(403).json({ error: 'Biên tập viên đã được chỉ định cho bái báo này!' });
         }
         else {
-            submission.editorId = editorId;
+            const editorAssignment = new EditorAssignment({
+                submissionId: submissionId,
+                editorId: editorId,
+                dueDate: Date.parse(dueDate),
+                message: message,
+                isAccepted: false
+            });
+            await editorAssignment.save();
 
             const reviewStage = await Stage.findOne(STAGE.REVIEW);
             submission.submissionStatus.stageId = reviewStage._id;

@@ -31,10 +31,6 @@ const submissionSchema = new mongoose.Schema({
         required: true,
         ref: 'User'
     },
-    editorId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    },
     submissionStatus: {
         status: {
             type: String,
@@ -45,7 +41,12 @@ const submissionSchema = new mongoose.Schema({
             required: true,
             ref: 'Stage'
         }
-    }
+    },
+    submissionLogs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'SubmissionLog'
+    }]
 }, {
     timestamps: true
 });

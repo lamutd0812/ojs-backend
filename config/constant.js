@@ -40,7 +40,33 @@ exports.STAGE = {
     }
 };
 
+exports.EDITOR_DECISION = {
+    ACCEPT_SUBMISSION: {
+        decisionName: 'Chấp nhận bài báo.',
+        value: 1
+    },
+    REVISION_REQUIRED: {
+        decisionName: 'Yêu cầu chỉnh sửa.',
+        value: 2
+    },
+    DECLINE_SUBMISSION: {
+        decisionName: 'Từ chối bài báo.',
+        value: 0
+    }
+}
+
+exports.REVIEWER_DECISION = {
+    ACCEPT_SUBMISSION: {
+        decisionName: 'Chấp nhận bài báo.',
+        value: 1
+    },
+    REVISION_REQUIRED: {
+        decisionName: 'Yêu cầu chỉnh sửa.',
+        value: 2
+    }
+}
+
 exports.SUBMISSION_STATUS = {
     AUTHOR_SUBMIT_SUCCESS: 'Đăng bài lên hệ thống thành công.',
-    ASSIGN_EDITOR_SUCCESS: 'Biên tập viên đã được chỉ định'
+    ASSIGN_EDITOR_SUCCESS: 'Biên tập viên đã được chỉ định.'
 };
