@@ -46,6 +46,14 @@ const submissionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'SubmissionLog'
+    }],
+    editorAssignmentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'EditorAssignment'
+    },
+    reviewerAssignmentId: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ReviewerAssignment'
     }]
 }, {
     timestamps: true

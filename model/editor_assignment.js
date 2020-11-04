@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
-const editrAssignmentSchema = new mongoose.Schema({
-    submissionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Submission'
-    },
+const editorAssignmentSchema = new mongoose.Schema({
     editorId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -31,4 +26,4 @@ const editrAssignmentSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('EditorAssignment', editrAssignmentSchema, 'editor_assignments');
+module.exports = mongoose.model('EditorAssignment', editorAssignmentSchema, 'editor_assignments');

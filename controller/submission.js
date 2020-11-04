@@ -12,7 +12,7 @@ exports.getAllSubmissions = async (req, res) => {
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'submissionStatus.stageId', select: 'name value' })
-            .populate({ path: 'submissionLogs', select: 'event createdAt -_id' }).exec();
+            .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submissions: submissions });
     } catch (err) {
         res.status(500).json({
@@ -28,7 +28,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'submissionStatus.stageId', select: 'name value' })
-            .populate({ path: 'submissionLogs', select: 'event createdAt -_id' }).exec();
+            .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submissions: submissions });
     } catch (err) {
         res.status(500).json({
@@ -44,7 +44,7 @@ exports.getSubmissionById = async (req, res) => {
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'submissionStatus.stageId', select: 'name value' })
-            .populate({ path: 'submissionLogs', select: 'event createdAt -_id' }).exec();
+            .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submission: submission });
     } catch (err) {
         res.status(500).json({
