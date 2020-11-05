@@ -4,11 +4,13 @@ const { checkAuth } = require('../middlewares/check-auth');
 
 const router = express.Router();
 
-const upload = require('../services/file-upload');
+const { uploadFile } = require('../services/file-services');
 
 router.get('/', checkAuth, submissionController.getAllSubmissions);
 router.get('/:submissionId', checkAuth, submissionController.getSubmissionById);
 router.get('/author/:authorId', checkAuth, submissionController.getSubmissionsByAuthor);
-router.post('/', checkAuth, upload.single('attachment'), submissionController.createNewSubmission);
+router.post('/', checkAuth, uploadFile.single('attachment'), submissionController.createNewSubmission);
+router.put('/:submissionId', uploadFile.single('attachment'));
+router.delete('/:submissionId', submissionController.deleteSubmission);
 
 module.exports = router;

@@ -6,6 +6,8 @@ const Stage = require('../model/stage');
 const { STAGE, SUBMISSION_STATUS } = require('../config/constant');
 const logTemplates = require('../utils/log-templates');
 
+const { deleteFile } = require('../services/file-services');
+
 exports.getAllSubmissions = async (req, res) => {
     try {
         const submissions = await Submission.find().sort({ _id: -1 })
@@ -104,5 +106,28 @@ exports.createNewSubmission = async (req, res) => {
             });
             console.log(err);
         }
+    }
+};
+
+exports.deleteSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    try {
+        const submission = await Submission.findById(submissionId);
+        const result = deleteFile(submission.attachmentUrl);
+        if (result.error) {
+            res.status(404).json({
+                message: "Delete Attachment Failed.",
+                error: result.error
+            });
+        } else {
+            await Submission.findByIdAndDelete(submissionId);
+            res.status(200).json({
+                message: "Submission Deleted.",
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            error: err
+        });
     }
 };

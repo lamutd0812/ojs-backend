@@ -2,6 +2,7 @@ const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const config = require('../config/config');
+const { getFileNameFromUrl } = require('../utils/utility');
 
 aws.config.update({
     accessKeyId: config.AWS_ACCESS_KEY,
@@ -23,7 +24,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const upload = multer({
+exports.uploadFile = multer({
     storage: multerS3({
         s3: s3,
         bucket: config.AWS_S3_BUCKET_NAME,
@@ -39,4 +40,26 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
-module.exports = upload;
+exports.deleteFile = (fileUrl) => {
+    const params = {
+        Bucket: config.AWS_S3_BUCKET_NAME,
+        Key: getFileNameFromUrl(fileUrl)
+    };
+
+    let result = {
+        error: null,
+        data: null
+    };
+
+    s3.deleteObject(params, (err, data) => {
+        if (err) {
+            console.log(err, err.stack);
+            result.error = err.stack;
+        }
+        else {
+            console.log('object deleted', data);
+        }
+    });
+
+    return result;
+};

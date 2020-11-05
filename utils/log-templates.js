@@ -4,5 +4,5 @@ exports.authorSubmitArticle = (authorName) => {
 };
 
 exports.chiefEditorAssignEditor = (chiefEditorName, editorName) => {
-    return chiefEditorName + ' đã chỉ định biên tập viên ' + editorName + ' chủ trì quá trình thẩm định';
+    return chiefEditorName + ' đã chỉ định biên tập viên ' + editorName + ' chủ trì quá trình thẩm định.';
 };
