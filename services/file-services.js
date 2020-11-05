@@ -20,7 +20,9 @@ const fileFilter = (req, file, cb) => {
     ) {
         cb(null, true);
     } else {
-        cb(null, false);
+        const error = 'Chỉ được upload file dạng .pdf/.doc/.docx!';
+        req.error = error;
+        return cb(null,false);
     }
 };
 

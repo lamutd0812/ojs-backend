@@ -1,6 +1,10 @@
 
 exports.authorSubmitArticle = (authorName) => {
-    return 'Tác giả ' + authorName + ' đã submit bài báo lên hệ thống.'
+    return 'Tác giả ' + authorName + ' đã submit bài báo lên hệ thống.';
+};
+
+exports.authorUpdateArticle = (authorName) => {
+    return 'Tác giả ' + authorName + ' đã chỉnh sửa bài báo.';
 };
 
 exports.chiefEditorAssignEditor = (chiefEditorName, editorName) => {

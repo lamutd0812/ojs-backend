@@ -68,13 +68,11 @@ exports.createNewSubmission = async (req, res) => {
         categoryId = category[0]._id;
     }
 
-    if (!req.file) {
+    if (req.error) {
         res.status(500).json({
-            error: 'Chỉ được upload file dạng .pdf/.doc/.docx!'
+            error: req.error
         });
     } else {
-        attachmentFile = req.file.originalname;
-        attachmentUrl = req.file.location;
         try {
             const submissionStage = await Stage.findOne({ value: STAGE.SUBMISSION.value });
 
@@ -85,6 +83,10 @@ exports.createNewSubmission = async (req, res) => {
             const newLog = await log.save();
             logs.push(newLog._id);
 
+            if (req.file) {
+                attachmentFile = req.file.originalname;
+                attachmentUrl = req.file.location;
+            }
             const submission = new Submission({
                 categoryId: categoryId,
                 title: title,
@@ -107,6 +109,52 @@ exports.createNewSubmission = async (req, res) => {
             console.log(err);
         }
     }
+};
+
+exports.updateSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    let categoryId = req.body.categoryId;
+    const title = req.body.title;
+    const abstract = req.body.abstract;
+
+    const submission = await Submission.findById(submissionId);
+
+    if (categoryId === "") {
+        categoryId = submission.categoryId.toString();
+    }
+    if (req.error) {
+        res.status(500).json({
+            error: req.error
+        });
+    } else {
+        try {
+            submission.categoryId = categoryId;
+            submission.title = title;
+            submission.abstract = abstract;
+            if (req.file) {
+                // delete current attachmentUrl
+                deleteFile(submission.attachmentUrl);
+                submission.attachmentFile = req.file.originalname;
+                submission.attachmentUrl = req.file.location;
+            }
+
+            // update log
+            const log = new SubmissionLog({
+                event: logTemplates.authorUpdateArticle(req.user.fullname)
+            });
+            const newLog = await log.save();
+            submission.submissionLogs.push(newLog._id);
+
+            const updatedSubmission = await submission.save();
+            res.status(200).json({ submission: updatedSubmission });
+        } catch (err) {
+            res.status(500).json({
+                error: err
+            });
+            console.log(err);
+        }
+    }
+
 };
 
 exports.deleteSubmission = async (req, res) => {
