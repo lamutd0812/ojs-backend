@@ -78,7 +78,8 @@ exports.createNewSubmission = async (req, res) => {
 
             let logs = [];
             const log = new SubmissionLog({
-                event: logTemplates.authorSubmitArticle(req.user.fullname)
+                event: logTemplates.authorSubmitArticle(req.user.fullname),
+                createdAt: new Date()
             });
             const newLog = await log.save();
             logs.push(newLog._id);
@@ -140,7 +141,8 @@ exports.updateSubmission = async (req, res) => {
 
             // update log
             const log = new SubmissionLog({
-                event: logTemplates.authorUpdateArticle(req.user.fullname)
+                event: logTemplates.authorUpdateArticle(req.user.fullname),
+                createdAt: new Date()
             });
             const newLog = await log.save();
             submission.submissionLogs.push(newLog._id);

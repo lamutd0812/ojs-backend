@@ -7,7 +7,7 @@ const submissionLogSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        default: new Date()
+        required: true
     }
 });
 

@@ -47,7 +47,8 @@ exports.assignEditor = async (req, res) => {
             // add submisison log
             const editor = await User.findById(editorId).select('firstname lastname');
             const log = new SubmissionLog({
-                event: logTemplates.chiefEditorAssignEditor(req.user.fullname, editor.lastname + ' ' + editor.firstname)
+                event: logTemplates.chiefEditorAssignEditor(req.user.fullname, editor.lastname + ' ' + editor.firstname),
+                createdAt: new Date()
             });
             const newLog = await log.save();
             submission.submissionLogs.push(newLog._id);
