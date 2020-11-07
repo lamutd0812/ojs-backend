@@ -17,6 +17,7 @@ exports.getAllSubmissions = async (req, res) => {
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submissions: submissions });
     } catch (err) {
+        console.log(err);
         res.status(500).json({
             error: err
         });
@@ -33,6 +34,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submissions: submissions });
     } catch (err) {
+        console.log(err);
         res.status(500).json({
             error: err
         });
@@ -49,6 +51,7 @@ exports.getSubmissionById = async (req, res) => {
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submission: submission });
     } catch (err) {
+        console.log(err);
         res.status(500).json({
             error: err
         });
@@ -104,10 +107,10 @@ exports.createNewSubmission = async (req, res) => {
             const newSubmission = await submission.save();
             res.status(200).json({ submission: newSubmission });
         } catch (err) {
+            console.log(err);
             res.status(500).json({
                 error: err
             });
-            console.log(err);
         }
     }
 };
@@ -118,17 +121,17 @@ exports.updateSubmission = async (req, res) => {
     const title = req.body.title;
     const abstract = req.body.abstract;
 
-    const submission = await Submission.findById(submissionId);
+    try {
+        const submission = await Submission.findById(submissionId);
 
-    if (categoryId === "") {
-        categoryId = submission.categoryId.toString();
-    }
-    if (req.error) {
-        res.status(500).json({
-            error: req.error
-        });
-    } else {
-        try {
+        if (categoryId === "") {
+            categoryId = submission.categoryId.toString();
+        }
+        if (req.error) {
+            res.status(500).json({
+                error: req.error
+            });
+        } else {
             submission.categoryId = categoryId;
             submission.title = title;
             submission.abstract = abstract;
@@ -137,26 +140,25 @@ exports.updateSubmission = async (req, res) => {
                 deleteFile(submission.attachmentUrl);
                 submission.attachmentFile = req.file.originalname;
                 submission.attachmentUrl = req.file.location;
+
+                // update log
+                const log = new SubmissionLog({
+                    event: logTemplates.authorUpdateArticle(req.user.fullname),
+                    createdAt: new Date()
+                });
+                const newLog = await log.save();
+                submission.submissionLogs.push(newLog._id);
+
+                const updatedSubmission = await submission.save();
+                res.status(200).json({ submission: updatedSubmission });
             }
-
-            // update log
-            const log = new SubmissionLog({
-                event: logTemplates.authorUpdateArticle(req.user.fullname),
-                createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
-
-            const updatedSubmission = await submission.save();
-            res.status(200).json({ submission: updatedSubmission });
-        } catch (err) {
-            res.status(500).json({
-                error: err
-            });
-            console.log(err);
         }
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        });
     }
-
 };
 
 exports.deleteSubmission = async (req, res) => {
@@ -170,12 +172,18 @@ exports.deleteSubmission = async (req, res) => {
                 error: result.error
             });
         } else {
+            // delete submission
             await Submission.findByIdAndDelete(submissionId);
+            // delete logs of this submission.
+            submission.submissionLogs.forEach(async logId => {
+                await SubmissionLog.findByIdAndDelete(logId);
+            });
             res.status(200).json({
                 message: "Submission Deleted.",
             });
         }
     } catch (err) {
+        console.log(err);
         res.status(500).json({
             error: err
         });
