@@ -8,7 +8,10 @@ const router = express.Router();
 router.get('/editors', checkAuth, reviewProcessController.getAllEditors);
 router.put('/assign-editor', checkAuth, reviewProcessController.assignEditor);
 
-// All Roles: get Editor Assignment
-router.get('/editor-assignment/:submissionId', reviewProcessController.getEditorAssignment);
+// Chief Editor: get Editor Assignment of Submisison
+router.get('/editor-assignments/:submissionId', checkAuth, reviewProcessController.getEditorAssignmentBySubmission);
+
+// Editor: get all submission and assignment that assigned
+router.get('/editor-assignments/my/all',checkAuth, reviewProcessController.getMyEditorAssignments);
 
 module.exports = router;

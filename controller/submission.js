@@ -13,7 +13,7 @@ exports.getAllSubmissions = async (req, res) => {
         const submissions = await Submission.find().sort({ _id: -1 })
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
-            .populate({ path: 'submissionStatus.stageId', select: 'name value' })
+            .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submissions: submissions });
     } catch (err) {
@@ -30,7 +30,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
         const submissions = await Submission.find({ authorId: authorId }).sort({ _id: -1 })
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
-            .populate({ path: 'submissionStatus.stageId', select: 'name value' })
+            .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submissions: submissions });
     } catch (err) {
@@ -47,7 +47,7 @@ exports.getSubmissionById = async (req, res) => {
         const submission = await Submission.findById(submissionId)
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
-            .populate({ path: 'submissionStatus.stageId', select: 'name value' })
+            .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
         res.status(200).json({ submission: submission });
     } catch (err) {

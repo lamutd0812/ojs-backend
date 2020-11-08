@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const editorAssignmentSchema = new mongoose.Schema({
+    submissionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Submission'
+    },
     editorId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

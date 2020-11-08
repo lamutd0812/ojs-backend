@@ -25,19 +25,20 @@ exports.assignEditor = async (req, res) => {
     const dueDate = req.body.dueDate;
     const message = req.body.message;
     try {
-        const submission = await Submission.findById(submissionId);
-        if (submission.editorAssignmentId) {
+        const prevEditorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
+        if (prevEditorAssignment) {
             res.status(403).json({ error: 'Biên tập viên đã được chỉ định cho bái báo này!' });
         }
         else {
+            const submission = await Submission.findById(submissionId);
             const editorAssignment = new EditorAssignment({
+                submissionId: submissionId,
                 editorId: editorId,
                 dueDate: Date.parse(dueDate),
                 message: message,
                 isAccepted: false
             });
             await editorAssignment.save();
-            submission.editorAssignmentId = editorAssignment._id;
 
             // update submission status
             const reviewStage = await Stage.findOne(STAGE.REVIEW);
@@ -47,7 +48,7 @@ exports.assignEditor = async (req, res) => {
             // add submisison log
             const editor = await User.findById(editorId).select('firstname lastname');
             const log = new SubmissionLog({
-                event: logTemplates.chiefEditorAssignEditor(req.user.fullname, editor.lastname + ' ' + editor.firstname),
+                event: logTemplates.chiefEditorAssignEditor(editor.firstname + ' ' + editor.lastname),
                 createdAt: new Date()
             });
             const newLog = await log.save();
@@ -67,11 +68,10 @@ exports.assignEditor = async (req, res) => {
     }
 };
 
-exports.getEditorAssignment = async (req, res) => {
+exports.getEditorAssignmentBySubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     try {
-        const submission = await Submission.findById(submissionId);
-        const editorAssignment = await EditorAssignment.findById(submission.editorAssignmentId)
+        const editorAssignment = await EditorAssignment.findOne({ submissionId: submissionId })
             .populate('editorId', 'firstname lastname').exec();
         res.status(200).json({
             editorAssignment: editorAssignment
@@ -82,3 +82,18 @@ exports.getEditorAssignment = async (req, res) => {
         });
     }
 };
+
+exports.getMyEditorAssignments = async (req, res) => {
+    const editorId = req.user.userId;
+    try {
+        const editorAssignments = await EditorAssignment.find({ editorId: editorId });
+            // .populate('submissionId').exec();
+        res.status(200).json({
+            editorAssignments: editorAssignments
+        });
+    } catch (err) {
+        res.status(500).json({
+            error: err
+        });
+    }
+}

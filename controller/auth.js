@@ -74,7 +74,7 @@ exports.signin = async (req, res) => {
     let loadedUser;
     try {
         const user = await User.findOne({ username: username })
-            .populate({ path: 'role', select: 'name permissionLevel -_id' });
+            .populate({ path: 'role', select: 'name' });
         if (!user) {
             res.status(401).json({
                 error: 'Tài khoản không tồn tại!'
@@ -91,7 +91,7 @@ exports.signin = async (req, res) => {
             {
                 username: loadedUser.username,
                 userId: loadedUser._id.toString(),
-                fullname: loadedUser.firstname + ' ' + loadedUser.lastname,
+                fullname: loadedUser.lastname + ' ' + loadedUser.firstname,
                 role: loadedUser.role
             },
             config.JWT_SECRET,
@@ -101,7 +101,7 @@ exports.signin = async (req, res) => {
             message: 'Đăng nhập thành công!',
             token: token,
             userId: loadedUser._id.toString(),
-            fullname: loadedUser.firstname + ' ' + loadedUser.lastname,
+            fullname: loadedUser.lastname + ' ' + loadedUser.firstname,
             avatar: loadedUser.avatar,
             role: loadedUser.role
         })

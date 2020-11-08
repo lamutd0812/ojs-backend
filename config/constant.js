@@ -4,19 +4,19 @@ exports.USER_ROLES = {
         permissionLevel: 5
     },
     CHIEF_EDITOR: {
-        name: 'Chief Editor',
+        name: 'Tổng biên tập',
         permissionLevel: 4
     },
     EDITOR: {
-        name: 'Editor',
+        name: 'Biên tập viên',
         permissionLevel: 3
     },
     REVIEWER: {
-        name: 'Reviewer',
+        name: 'Thẩm định viên',
         permissionLevel: 2
     },
     AUTHOR: {
-        name: 'Author',
+        name: 'Tác giả',
         permissionLevel: 1
     }
 };
