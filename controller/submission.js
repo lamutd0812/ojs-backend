@@ -137,21 +137,28 @@ exports.updateSubmission = async (req, res) => {
             submission.abstract = abstract;
             if (req.file) {
                 // delete current attachmentUrl
-                deleteFile(submission.attachmentUrl);
-                submission.attachmentFile = req.file.originalname;
-                submission.attachmentUrl = req.file.location;
-
-                // update log
-                const log = new SubmissionLog({
-                    event: logTemplates.authorUpdateArticle(req.user.fullname),
-                    createdAt: new Date()
-                });
-                const newLog = await log.save();
-                submission.submissionLogs.push(newLog._id);
-
-                const updatedSubmission = await submission.save();
-                res.status(200).json({ submission: updatedSubmission });
+                const result = deleteFile(submission.attachmentUrl);
+                if (result.error) {
+                    res.status(404).json({
+                        message: "Delete Attachment Failed.",
+                        error: result.error
+                    });
+                } else {
+                    submission.attachmentFile = req.file.originalname;
+                    submission.attachmentUrl = req.file.location;
+                }
             }
+
+            // update log
+            const log = new SubmissionLog({
+                event: logTemplates.authorUpdateArticle(req.user.fullname),
+                createdAt: new Date()
+            });
+            const newLog = await log.save();
+            submission.submissionLogs.push(newLog._id);
+
+            const updatedSubmission = await submission.save();
+            res.status(200).json({ submission: updatedSubmission });
         }
     } catch (err) {
         console.log(err);
