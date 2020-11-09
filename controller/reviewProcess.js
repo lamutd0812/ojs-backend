@@ -6,6 +6,7 @@ const EditorAssignment = require('../model/editor_assignment');
 const SubmissionLog = require('../model/submission_log');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS } = require('../config/constant');
+// const { updateObject, generateRandomString } = require('../utils/utility');
 
 exports.getAllEditors = async (req, res) => {
     try {
@@ -86,8 +87,13 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
 exports.getMyEditorAssignments = async (req, res) => {
     const editorId = req.user.userId;
     try {
-        const editorAssignments = await EditorAssignment.find({ editorId: editorId });
-            // .populate('submissionId').exec();
+        const editorAssignments = await EditorAssignment
+            .find({ editorId: editorId })
+            .populate({
+                path: 'submissionId',
+                select: 'title submissionStatus',
+                populate: { path: 'submissionStatus.stageId', select: 'name value -_id' }
+            }).exec();
         res.status(200).json({
             editorAssignments: editorAssignments
         });
