@@ -75,5 +75,7 @@ exports.REVIEWER_DECISION = {
 
 exports.SUBMISSION_STATUS = {
     AUTHOR_SUBMIT_SUCCESS: 'Đăng bài lên hệ thống thành công.',
-    ASSIGN_EDITOR_SUCCESS: 'Biên tập viên đã được chỉ định.'
+    ASSIGN_EDITOR_SUCCESS: 'Biên tập viên đã được chỉ định.',
+    ASSIGN_REVIEWER_SUCCESS: 'Thẩm định viên đã được chỉ định.',
+    REVIEW_IN_PROCESS: 'Quá trình thẩm định đang diễn ra',
 };

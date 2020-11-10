@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const reviewerAssignmentSchema = new mongoose.Schema({
-    editorAssignmentId: {
+    submissionId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'EditorAssignment'
+        ref: 'Submission'
     },
     reviewerId: {
         type: mongoose.Schema.Types.ObjectId,

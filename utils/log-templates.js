@@ -10,3 +10,7 @@ exports.authorUpdateArticle = (authorName) => {
 exports.chiefEditorAssignEditor = (editorName) => {
     return 'Tổng biên tập đã chỉ định biên tập viên ' + editorName + ' chủ trì quá trình thẩm định.';
 };
+
+exports.editorAssignReviewer = (reviewerName) => {
+    return 'Biên tập viên đã chỉ định thẩm định viên ' + reviewerName + ' thẩm định bài báo.';
+};
