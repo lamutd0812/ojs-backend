@@ -4,6 +4,7 @@ const Submission = require('../model/submission');
 const Stage = require('../model/stage');
 const EditorAssignment = require('../model/editor_assignment');
 const SubmissionLog = require('../model/submission_log');
+const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS } = require('../config/constant');
 // const { updateObject, generateRandomString } = require('../utils/utility');
@@ -12,9 +13,9 @@ exports.getAllEditors = async (req, res) => {
     try {
         const editorRole = await UserRole.findOne(USER_ROLES.EDITOR);
         const editors = await User.find({ role: editorRole._id });
-        res.status(200).json({ editors: editors });
+        res.status(StatusCodes.OK).json({ editors: editors });
     } catch (err) {
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }
@@ -28,7 +29,7 @@ exports.assignEditor = async (req, res) => {
     try {
         const prevEditorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
         if (prevEditorAssignment) {
-            res.status(403).json({ error: 'Biên tập viên đã được chỉ định cho bái báo này!' });
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã được chỉ định cho bái báo này!' });
         }
         else {
             const submission = await Submission.findById(submissionId);
@@ -57,13 +58,13 @@ exports.assignEditor = async (req, res) => {
 
             await submission.save();
             // const savedSunmission = await submission.save();
-            res.status(200).json({
+            res.status(StatusCodes.OK).json({
                 message: 'Chỉ định biên tập viên thành công!',
                 // submission: savedSunmission
             });
         }
     } catch (err) {
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }
@@ -74,11 +75,11 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
     try {
         const editorAssignment = await EditorAssignment.findOne({ submissionId: submissionId })
             .populate('editorId', 'firstname lastname').exec();
-        res.status(200).json({
+        res.status(StatusCodes.OK).json({
             editorAssignment: editorAssignment
         });
     } catch (err) {
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }
@@ -94,11 +95,11 @@ exports.getMyEditorAssignments = async (req, res) => {
                 select: 'title submissionStatus',
                 populate: { path: 'submissionStatus.stageId', select: 'name value -_id' }
             }).exec();
-        res.status(200).json({
+        res.status(StatusCodes.OK).json({
             editorAssignments: editorAssignments
         });
     } catch (err) {
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }

@@ -1,5 +1,6 @@
 const User = require('../model/user');
 const UserRole = require('../model/user_role');
+const { StatusCodes } = require('http-status-codes');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
@@ -20,12 +21,12 @@ exports.signup = async (req, res) => {
         const emailCheck = await User.findOne({ email: email });
         if (userCheck || emailCheck) {
             if (userCheck) {
-                res.status(401).json({
+                res.status(StatusCodes.UNAUTHORIZED).json({
                     error: 'Tài khoản hoặc đã tồn tại!'
                 });
             }
             if (emailCheck) {
-                res.status(401).json({
+                res.status(StatusCodes.UNAUTHORIZED).json({
                     error: 'Email này đã được đăng ký!'
                 });
             }
@@ -55,13 +56,13 @@ exports.signup = async (req, res) => {
             });
 
             const newUser = await user.save();
-            res.status(201).json({
+            res.status(StatusCodes.CREATED).json({
                 message: 'Đăng ký tài khoản thành công!',
                 userId: newUser._id
             });
         }
     } catch (err) {
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
         console.log(err);
@@ -76,14 +77,14 @@ exports.signin = async (req, res) => {
         const user = await User.findOne({ username: username })
             .populate({ path: 'role', select: 'name' });
         if (!user) {
-            res.status(401).json({
+            res.status(StatusCodes.UNAUTHORIZED).json({
                 error: 'Tài khoản không tồn tại!'
             });
         }
         loadedUser = user;
         const isEqualPw = await bcrypt.compare(password, loadedUser.password);
         if (!isEqualPw) {
-            res.status(401).json({
+            res.status(StatusCodes.UNAUTHORIZED).json({
                 error: 'Tài khoản hoặc mật khẩu không đúng!'
             });
         }
@@ -97,7 +98,7 @@ exports.signin = async (req, res) => {
             config.JWT_SECRET,
             { expiresIn: '12h' }
         );
-        res.status(200).json({
+        res.status(StatusCodes.OK).json({
             message: 'Đăng nhập thành công!',
             token: token,
             userId: loadedUser._id.toString(),
@@ -106,7 +107,7 @@ exports.signin = async (req, res) => {
             role: loadedUser.role
         })
     } catch (err) {
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
         console.log(err);

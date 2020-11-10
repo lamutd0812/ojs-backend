@@ -40,6 +40,17 @@ exports.STAGE = {
     }
 };
 
+exports.CHIEF_EDITOR_DECISION = {
+    ACCEPT_SUBMISSION: {
+        decisionName: 'Chấp nhận bài báo.',
+        value: 1
+    },
+    DECLINE_SUBMISSION: {
+        decisionName: 'Từ chối bài báo.',
+        value: 0
+    }
+}
+
 exports.EDITOR_DECISION = {
     ACCEPT_SUBMISSION: {
         decisionName: 'Chấp nhận bài báo.',
@@ -48,10 +59,6 @@ exports.EDITOR_DECISION = {
     REVISION_REQUIRED: {
         decisionName: 'Yêu cầu chỉnh sửa.',
         value: 2
-    },
-    DECLINE_SUBMISSION: {
-        decisionName: 'Từ chối bài báo.',
-        value: 0
     }
 }
 

@@ -3,6 +3,7 @@ const Submission = require('../model/submission');
 const SubmissionLog = require('../model/submission_log');
 const Category = require('../model/category');
 const Stage = require('../model/stage');
+const { StatusCodes } = require('http-status-codes');
 const { STAGE, SUBMISSION_STATUS } = require('../config/constant');
 const logTemplates = require('../utils/log-templates');
 
@@ -15,10 +16,10 @@ exports.getAllSubmissions = async (req, res) => {
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
-        res.status(200).json({ submissions: submissions });
+        res.status(StatusCodes.OK).json({ submissions: submissions });
     } catch (err) {
         console.log(err);
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }
@@ -32,10 +33,10 @@ exports.getSubmissionsByAuthor = async (req, res) => {
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
-        res.status(200).json({ submissions: submissions });
+        res.status(StatusCodes.OK).json({ submissions: submissions });
     } catch (err) {
         console.log(err);
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }
@@ -49,10 +50,10 @@ exports.getSubmissionById = async (req, res) => {
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id' })
-        res.status(200).json({ submission: submission });
+        res.status(StatusCodes.OK).json({ submission: submission });
     } catch (err) {
         console.log(err);
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }
@@ -72,13 +73,14 @@ exports.createNewSubmission = async (req, res) => {
     }
 
     if (req.error) {
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: req.error
         });
     } else {
         try {
             const submissionStage = await Stage.findOne({ value: STAGE.SUBMISSION.value });
 
+            // create logs
             let logs = [];
             const log = new SubmissionLog({
                 event: logTemplates.authorSubmitArticle(req.user.fullname),
@@ -105,10 +107,10 @@ exports.createNewSubmission = async (req, res) => {
                 submissionLogs: logs
             });
             const newSubmission = await submission.save();
-            res.status(200).json({ submission: newSubmission });
+            res.status(StatusCodes.CREATED).json({ submission: newSubmission });
         } catch (err) {
             console.log(err);
-            res.status(500).json({
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 error: err
             });
         }
@@ -128,7 +130,7 @@ exports.updateSubmission = async (req, res) => {
             categoryId = submission.categoryId.toString();
         }
         if (req.error) {
-            res.status(500).json({
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 error: req.error
             });
         } else {
@@ -139,7 +141,7 @@ exports.updateSubmission = async (req, res) => {
                 // delete current attachmentUrl
                 const result = deleteFile(submission.attachmentUrl);
                 if (result.error) {
-                    res.status(404).json({
+                    res.status(StatusCodes.NOT_FOUND).json({
                         message: "Delete Attachment Failed.",
                         error: result.error
                     });
@@ -149,7 +151,7 @@ exports.updateSubmission = async (req, res) => {
                 }
             }
 
-            // update log
+            // update logs
             const log = new SubmissionLog({
                 event: logTemplates.authorUpdateArticle(req.user.fullname),
                 createdAt: new Date()
@@ -158,11 +160,11 @@ exports.updateSubmission = async (req, res) => {
             submission.submissionLogs.push(newLog._id);
 
             const updatedSubmission = await submission.save();
-            res.status(200).json({ submission: updatedSubmission });
+            res.status(StatusCodes.OK).json({ submission: updatedSubmission });
         }
     } catch (err) {
         console.log(err);
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }
@@ -174,7 +176,7 @@ exports.deleteSubmission = async (req, res) => {
         const submission = await Submission.findById(submissionId);
         const result = deleteFile(submission.attachmentUrl);
         if (result.error) {
-            res.status(404).json({
+            res.status(StatusCodes.NOT_FOUND).json({
                 message: "Delete Attachment Failed.",
                 error: result.error
             });
@@ -185,13 +187,13 @@ exports.deleteSubmission = async (req, res) => {
             submission.submissionLogs.forEach(async logId => {
                 await SubmissionLog.findByIdAndDelete(logId);
             });
-            res.status(200).json({
+            res.status(StatusCodes.OK).json({
                 message: "Submission Deleted.",
             });
         }
     } catch (err) {
         console.log(err);
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
     }

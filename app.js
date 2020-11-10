@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-// const morgan = require('morgan');
+const morgan = require('morgan');
 const config = require('./config/config');
 
 require('dotenv').config();
@@ -14,6 +14,8 @@ const submissionRoutes = require('./routes/submission');
 const reviewProcessRoutes = require('./routes/reviewProcess');
 
 const app = express();
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
 //middlewares
 app.use(bodyParser.urlencoded({ extended: false }));
