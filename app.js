@@ -15,7 +15,7 @@ const reviewProcessRoutes = require('./routes/reviewProcess');
 
 const app = express();
 
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+app.use(morgan('dev'));
 
 //middlewares
 app.use(bodyParser.urlencoded({ extended: false }));

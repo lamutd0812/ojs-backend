@@ -8,6 +8,7 @@ const SubmissionLog = require('../model/submission_log');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS } = require('../config/constant');
+const editor_assignment = require('../model/editor_assignment');
 // const { updateObject, generateRandomString } = require('../utils/utility');
 
 exports.getAllEditors = async (req, res) => {
@@ -113,6 +114,7 @@ exports.assignReviewer = async (req, res) => {
         }
         else {
             const submission = await Submission.findById(submissionId);
+
             const reviewerAssignment = new ReviewerAssignment({
                 submissionId: submissionId,
                 reviewerId: reviewerId,
@@ -121,6 +123,11 @@ exports.assignReviewer = async (req, res) => {
                 isAccepted: false
             });
             await reviewerAssignment.save();
+
+            // add ref to editor assignment
+            const editorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
+            editorAssignment.reviewerAssignmentId.push(reviewerAssignment._id);
+            await editorAssignment.save();
 
             // update submission status
             const reviewStage = await Stage.findOne(STAGE.REVIEW);
@@ -186,11 +193,18 @@ exports.getMyEditorAssignments = async (req, res) => {
     try {
         const editorAssignments = await EditorAssignment
             .find({ editorId: editorId })
+            .populate({ path: 'editorId', select: 'firstname lastname' })
             .populate({
                 path: 'submissionId',
                 select: 'title submissionStatus',
-                populate: { path: 'submissionStatus.stageId', select: 'name value -_id' }
-            }).exec();
+                populate: { path: 'submissionStatus.stageId', select: 'name value -_id' },
+                populate: { path: 'authorId', select: 'firstname lastname' }
+            }).populate({
+                path: 'reviewerAssignmentId',
+                select: 'reviewerId',
+                populate: { path: 'reviewerId', select: 'firstname lastname' }
+            })
+            .exec();
         res.status(StatusCodes.OK).json({
             editorAssignments: editorAssignments
         });
