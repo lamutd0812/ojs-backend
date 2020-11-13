@@ -196,10 +196,13 @@ exports.getMyEditorAssignments = async (req, res) => {
             .populate({ path: 'editorId', select: 'firstname lastname' })
             .populate({
                 path: 'submissionId',
-                select: 'title submissionStatus',
-                populate: { path: 'submissionStatus.stageId', select: 'name value -_id' },
-                populate: { path: 'authorId', select: 'firstname lastname' }
-            }).populate({
+                select: 'title submissionStatus authorId',
+                populate: [
+                    { path: 'submissionStatus.stageId', select: 'name value -_id' },
+                    { path: 'authorId', select: 'firstname lastname' }
+                ]
+            })
+            .populate({
                 path: 'reviewerAssignmentId',
                 select: 'reviewerId',
                 populate: { path: 'reviewerId', select: 'firstname lastname' }
