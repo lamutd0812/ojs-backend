@@ -129,7 +129,7 @@ exports.updateSubmission = async (req, res) => {
         if (categoryId === "") {
             categoryId = submission.categoryId.toString();
         }
-        if (req.error) {
+        if (req.error) { // in file-service upload error.
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 error: req.error
             });

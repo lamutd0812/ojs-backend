@@ -8,30 +8,41 @@ const SubmissionLog = require('../model/submission_log');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS } = require('../config/constant');
-const editor_assignment = require('../model/editor_assignment');
-// const { updateObject, generateRandomString } = require('../utils/utility');
 
 exports.getAllEditors = async (req, res) => {
+    const submissionId = req.query.submissionId;
     try {
+        let ids = [];
+        // Not assign Editor if Editor is Submisison's Author
+        const submission = await Submission.findById(submissionId).select('authorId');
+        ids.push(submission.authorId);
+
         const editorRole = await UserRole.findOne(USER_ROLES.EDITOR);
-        const editors = await User.find({ role: editorRole._id });
+        const editors = await User.find({
+            role: editorRole._id,
+            _id: { $nin: ids }
+        });
         res.status(StatusCodes.OK).json({ editors: editors });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
+        console.log(err);
     }
 }
 
 exports.getAllReviewers = async (req, res) => {
     const submissionId = req.query.submissionId;
     try {
-        // only get reviewers that not review this submission yet.
+        // Only get Reviewers that not assigned for this submission yet.
         const reviewerAssignments = await ReviewerAssignment
             .find({ submissionId: submissionId })
             .select('reviewerId -_id');
 
         let ids = [];
+        // Not Assign Reviewer if Reviewer is Submisison's Author
+        const submission = await Submission.findById(submissionId).select('authorId');
+        ids.push(submission.authorId);
         reviewerAssignments.map(assignment => {
             return ids.push(assignment.reviewerId);
         });
@@ -46,6 +57,7 @@ exports.getAllReviewers = async (req, res) => {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
+        console.log(err);
     }
 }
 
@@ -95,6 +107,7 @@ exports.assignEditor = async (req, res) => {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
+        console.log(err);
     }
 };
 
@@ -104,12 +117,14 @@ exports.assignReviewer = async (req, res) => {
     const dueDate = req.body.dueDate;
     const message = req.body.message;
     try {
-        // const prevReviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId });
-        const prevReviewerAssignment = await ReviewerAssignment.findOne({
-            submissionId: submissionId,
-            reviewerId: reviewerId
-        });
-        if (prevReviewerAssignment) {
+        const reviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId });
+        const prevReviewerAssignment = reviewerAssignments.filter(ra =>
+            (ra.submissionId.toString() === submissionId && ra.reviewerId.toString() === reviewerId)
+        );
+        if (reviewerAssignments.length >= 3) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bài báo đã có đủ thẩm định viên!' });
+        }
+        else if (prevReviewerAssignment.length > 0) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Thẩm định viên này đã được chỉ định từ trước!' });
         }
         else {
@@ -144,16 +159,15 @@ exports.assignReviewer = async (req, res) => {
             submission.submissionLogs.push(newLog._id);
 
             await submission.save();
-            // const savedSunmission = await submission.save();
             res.status(StatusCodes.OK).json({
-                message: 'Chỉ định thẩm định viên thành công!',
-                // submission: savedSunmission
+                message: 'Chỉ định thẩm định viên thành công!'
             });
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
+        console.log(err);
     }
 };
 
@@ -170,6 +184,7 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
+        console.log(err);
     }
 };
 
@@ -185,6 +200,7 @@ exports.getReviewerAssignmentsBySubmission = async (req, res) => {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
+        console.log(err);
     }
 };
 
@@ -215,5 +231,6 @@ exports.getMyEditorAssignments = async (req, res) => {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
         });
+        console.log(err);
     }
 }
