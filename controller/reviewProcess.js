@@ -62,6 +62,7 @@ exports.getAllReviewers = async (req, res) => {
 }
 
 exports.assignEditor = async (req, res) => {
+    const chiefEditorId = req.user.userId;
     const submissionId = req.body.submissionId;
     const editorId = req.body.editorId;
     const dueDate = req.body.dueDate;
@@ -76,6 +77,7 @@ exports.assignEditor = async (req, res) => {
             const editorAssignment = new EditorAssignment({
                 submissionId: submissionId,
                 editorId: editorId,
+                chiefEditorId: chiefEditorId,
                 dueDate: Date.parse(dueDate),
                 message: message,
                 isAccepted: false
@@ -112,6 +114,7 @@ exports.assignEditor = async (req, res) => {
 };
 
 exports.assignReviewer = async (req, res) => {
+    const editorId = req.user.userId;
     const submissionId = req.body.submissionId;
     const reviewerId = req.body.reviewerId;
     const dueDate = req.body.dueDate;
@@ -133,6 +136,7 @@ exports.assignReviewer = async (req, res) => {
             const reviewerAssignment = new ReviewerAssignment({
                 submissionId: submissionId,
                 reviewerId: reviewerId,
+                editorId: editorId,
                 dueDate: Date.parse(dueDate),
                 message: message,
                 isAccepted: false
@@ -176,7 +180,9 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     try {
         const editorAssignment = await EditorAssignment.findOne({ submissionId: submissionId })
-            .populate('editorId', 'firstname lastname').exec();
+            .populate('editorId', 'firstname lastname')
+            .populate('chiefEditorId', 'firstname lastname')
+            .exec();
         res.status(StatusCodes.OK).json({
             editorAssignment: editorAssignment
         });
@@ -192,7 +198,9 @@ exports.getReviewerAssignmentsBySubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     try {
         const reviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId })
-            .populate('reviewerId', 'firstname lastname').exec();
+            .populate('reviewerId', 'firstname lastname')
+            .populate('editorId', 'firstname lastname')
+            .exec();
         res.status(StatusCodes.OK).json({
             reviewerAssignments: reviewerAssignments
         });
@@ -210,6 +218,7 @@ exports.getMyEditorAssignments = async (req, res) => {
         const editorAssignments = await EditorAssignment
             .find({ editorId: editorId })
             .populate({ path: 'editorId', select: 'firstname lastname' })
+            .populate({ path: 'chiefEditorId', select: 'firstname lastname' })
             .populate({
                 path: 'submissionId',
                 select: 'title submissionStatus authorId',
@@ -233,4 +242,60 @@ exports.getMyEditorAssignments = async (req, res) => {
         });
         console.log(err);
     }
-}
+};
+
+exports.getMyReviewerAssignments = async (req, res) => {
+    const reviewerId = req.user.userId;
+    try {
+        const reviewerAssignments = await ReviewerAssignment
+            .find({ reviewerId: reviewerId })
+            .populate({ path: 'reviewerId', select: 'firstname lastname' })
+            .populate({ path: 'editorId', select: 'firstname lastname' })
+            .populate({
+                path: 'submissionId',
+                select: 'title submissionStatus authorId',
+                populate: [
+                    { path: 'submissionStatus.stageId', select: 'name value -_id' },
+                    { path: 'authorId', select: 'firstname lastname' }
+                ]
+            }).exec();
+        res.status(StatusCodes.OK).json({
+            reviewerAssignments: reviewerAssignments
+        });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+};
+
+exports.getMyReviewerAssignmentBySubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const reviewerId = req.user.userId;
+    try {
+        const reviewerAssignment = await ReviewerAssignment
+            .findOne({
+                reviewerId: reviewerId,
+                submissionId: submissionId
+            })
+            .populate({ path: 'reviewerId', select: 'firstname lastname' })
+            .populate({ path: 'editorId', select: 'firstname lastname' })
+            .populate({
+                path: 'submissionId',
+                select: 'title submissionStatus authorId',
+                populate: [
+                    { path: 'submissionStatus.stageId', select: 'name value -_id' },
+                    { path: 'authorId', select: 'firstname lastname' }
+                ]
+            }).exec();
+        res.status(StatusCodes.OK).json({
+            reviewerAssignment: reviewerAssignment
+        });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+};

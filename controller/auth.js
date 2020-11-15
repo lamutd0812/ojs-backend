@@ -22,7 +22,7 @@ exports.signup = async (req, res) => {
         if (userCheck || emailCheck) {
             if (userCheck) {
                 res.status(StatusCodes.UNAUTHORIZED).json({
-                    error: 'Tài khoản hoặc đã tồn tại!'
+                    error: 'Tài khoản này đã tồn tại!'
                 });
             }
             if (emailCheck) {
@@ -78,7 +78,7 @@ exports.signin = async (req, res) => {
             .populate({ path: 'role', select: 'name' });
         if (!user) {
             res.status(StatusCodes.UNAUTHORIZED).json({
-                error: 'Tài khoản không tồn tại!'
+                error: 'Tài khoản hoặc mật khẩu không đúng!'
             });
         }
         loadedUser = user;

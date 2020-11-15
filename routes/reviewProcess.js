@@ -21,4 +21,8 @@ router.get('/reviewers', checkAuth, reviewProcessController.getAllReviewers);
 // Editor assign Reviewer
 router.put('/assign-reviewer', checkAuth, reviewProcessController.assignReviewer);
 
+// Reviewer: get all submission and assignment that assigned
+router.get('/reviewer-assignments/my/all',checkAuth, reviewProcessController.getMyReviewerAssignments);
+router.get('/reviewer-assignments/my/:submissionId',checkAuth, reviewProcessController.getMyReviewerAssignmentBySubmission);
+
 module.exports = router;

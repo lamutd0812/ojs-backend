@@ -6,7 +6,12 @@ const reviewerAssignmentSchema = new mongoose.Schema({
         required: true,
         ref: 'Submission'
     },
-    reviewerId: {
+    reviewerId: { // Assignee
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    },
+    editorId: { // Assigner
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'User'

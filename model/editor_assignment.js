@@ -6,7 +6,12 @@ const editorAssignmentSchema = new mongoose.Schema({
         required: true,
         ref: 'Submission'
     },
-    editorId: {
+    editorId: { // Assignee
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    },
+    chiefEditorId: { // Assigner
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'User'
