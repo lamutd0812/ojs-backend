@@ -4,6 +4,7 @@ const Submission = require('../model/submission');
 const Stage = require('../model/stage');
 const EditorAssignment = require('../model/editor_assignment');
 const ReviewerAssignment = require('../model/reviewer_asignment');
+const ReviewerSubmission = require('../model/reviewer_submission');
 const SubmissionLog = require('../model/submission_log');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
@@ -292,6 +293,40 @@ exports.getMyReviewerAssignmentBySubmission = async (req, res) => {
         res.status(StatusCodes.OK).json({
             reviewerAssignment: reviewerAssignment
         });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+};
+
+exports.createReviewerSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const content = req.body.content;
+    const reviewerDecisionId = req.body.reviewerDecisionId;
+    const reviewerId = req.user.userId;
+    try {
+        const reviewerAssignment = await ReviewerAssignment.findOne({
+            submissionId: submissionId,
+            reviewerId: reviewerId
+        });
+        if (reviewerAssignment.reviewerSubmissionId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến trước đó!' });
+        } else {
+            const reviewerSubmission = new ReviewerSubmission({
+                content: content,
+                reviewerDecisionId: reviewerDecisionId
+            });
+            const rs = await reviewerSubmission.save();
+
+            reviewerAssignment.reviewerSubmissionId = rs._id;
+            await reviewerAssignment.save();
+            res.status(StatusCodes.CREATED).json({
+                message: 'Nộp ý kiến thành công!',
+                reviewerSubmission: rs
+            });
+        }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err

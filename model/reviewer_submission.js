@@ -4,6 +4,9 @@ const reviewerSubmissionSchema = new mongoose.Schema({
     content: {
         type: String
     },
+    attachmentFile: {
+        type: String
+    },
     reviewerDecisionId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ReviewerDecision',
