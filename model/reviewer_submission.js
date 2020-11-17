@@ -11,6 +11,12 @@ const reviewerSubmissionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ReviewerDecision',
         required: true
+    },
+    isAccepted: {
+        // when editor set isAccepted = true, reviewers can't edit their ReviewerSubmission. 
+        type: Boolean,
+        required: true,
+        default: false
     }
 }, {
     timestamps: true

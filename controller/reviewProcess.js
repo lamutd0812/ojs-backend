@@ -323,9 +323,43 @@ exports.createReviewerSubmission = async (req, res) => {
             reviewerAssignment.reviewerSubmissionId = rs._id;
             await reviewerAssignment.save();
             res.status(StatusCodes.CREATED).json({
-                message: 'Nộp ý kiến thành công!',
-                reviewerSubmission: rs
+                message: 'Gửi ý kiến thẩm định thành công!'
+                // reviewerSubmission: rs
             });
+        }
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+};
+
+exports.editReviewerSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const content = req.body.content;
+    const reviewerDecisionId = req.body.reviewerDecisionId;
+    const reviewerId = req.user.userId;
+    try {
+        const reviewerAssignment = await ReviewerAssignment.findOne({
+            submissionId: submissionId,
+            reviewerId: reviewerId
+        });
+        if (!reviewerAssignment.reviewerSubmissionId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Không tìm thấy ý kiến thẩm định nào của bạn cho bài báo này!' });
+        } else {
+            const reviewerSubmission = await ReviewerSubmission.findById(reviewerAssignment.reviewerSubmissionId);
+            if (reviewerSubmission.isAccepted) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã tiếp nhận ý kiến thẩm định trước đó!' });
+            } else {
+                reviewerSubmission.content = content;
+                reviewerSubmission.reviewerDecisionId = reviewerDecisionId;
+                await reviewerSubmission.save();
+                res.status(StatusCodes.OK).json({
+                    message: 'Chỉnh sửa ý kiến thẩm định thành công!',
+                    // reviewerSubmission: rs
+                });
+            }
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

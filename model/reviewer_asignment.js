@@ -27,10 +27,6 @@ const reviewerAssignmentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: false,
         ref: 'ReviewerSubmission'
-    },
-    isAccepted: {
-        type: Boolean,
-        required: true
     }
 }, {
     timestamps: true
