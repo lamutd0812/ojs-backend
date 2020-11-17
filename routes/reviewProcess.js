@@ -18,10 +18,14 @@ router.put('/assign-editor',
     reviewProcessController.assignEditor);
 
 // All role: Get Editor Assignment of Submisison
-router.get('/editor-assignments/:submissionId', checkAuth, reviewProcessController.getEditorAssignmentBySubmission);
+router.get('/editor-assignments/:submissionId',
+    checkAuth,
+    reviewProcessController.getEditorAssignmentBySubmission);
 
 // All role: Get Reviewer Assignment of Submisison
-router.get('/reviewer-assignments/:submissionId', checkAuth, reviewProcessController.getReviewerAssignmentsBySubmission);
+router.get('/reviewer-assignments/:submissionId',
+    checkAuth,
+    reviewProcessController.getReviewerAssignmentsBySubmission);
 
 // Editor: get all submission and assignment that assigned
 router.get('/editor-assignments/my/all',

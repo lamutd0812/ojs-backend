@@ -12,13 +12,16 @@ router.get('/',
     restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
     submissionController.getAllSubmissions);
 
-// All Roles
-router.get('/:submissionId', checkAuth, submissionController.getSubmissionById);
+// Author, Editor, Reviewer
+router.get('/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
+    submissionController.getSubmissionById);
 
-// Author
+// Author, Editor, Reviewer
 router.get('/author/:authorId',
     checkAuth,
-    restrict([USER_ROLES.AUTHOR.permissionLevel]),
+    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
     submissionController.getSubmissionsByAuthor);
 
 // Author
@@ -30,14 +33,15 @@ router.post('/', checkAuth,
 // Author
 router.put('/:submissionId',
     checkAuth,
-    restrict([USER_ROLES.AUTHOR.permissionLevel]),
+    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
+
     uploadFile.single('attachment'),
     submissionController.updateSubmission);
 
 // Author
 router.delete('/:submissionId',
     checkAuth,
-    restrict([USER_ROLES.AUTHOR.permissionLevel]),
+    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
     submissionController.deleteSubmission);
 
 module.exports = router;

@@ -1,7 +1,6 @@
 const { StatusCodes } = require('http-status-codes');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-const { USER_ROLES } = require('../config/constant');
 
 exports.checkAuth = (req, res, next) => {
     try {
@@ -18,8 +17,6 @@ exports.checkAuth = (req, res, next) => {
 
 exports.restrict = (permittedRoles) => {
     return (req, res, next) => {
-        console.log(permittedRoles);
-        console.log(req.user);
         if (permittedRoles.includes(req.user.role.permissionLevel)) {
             next();
         } else {

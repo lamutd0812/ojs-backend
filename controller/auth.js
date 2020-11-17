@@ -75,7 +75,7 @@ exports.signin = async (req, res) => {
     let loadedUser;
     try {
         const user = await User.findOne({ username: username })
-            .populate('role', 'name permissionLevel -_id');
+            .populate('role');
         if (!user) {
             res.status(StatusCodes.UNAUTHORIZED).json({
                 error: 'Tài khoản hoặc mật khẩu không đúng!'
