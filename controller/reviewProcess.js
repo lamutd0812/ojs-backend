@@ -6,6 +6,7 @@ const EditorAssignment = require('../model/editor_assignment');
 const ReviewerAssignment = require('../model/reviewer_asignment');
 const ReviewerSubmission = require('../model/reviewer_submission');
 const SubmissionLog = require('../model/submission_log');
+const ReviewerDecision = require('../model/reviewer_decision');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS } = require('../config/constant');
@@ -289,7 +290,13 @@ exports.getMyReviewerAssignmentBySubmission = async (req, res) => {
                     { path: 'submissionStatus.stageId', select: 'name value -_id' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
-            }).exec();
+            })
+            .populate({
+                path: 'reviewerSubmissionId',
+                select: '-_id -updatedAt',
+                populate: { path: 'reviewerDecisionId' }
+            })
+            .exec();
         res.status(StatusCodes.OK).json({
             reviewerAssignment: reviewerAssignment
         });
@@ -303,9 +310,15 @@ exports.getMyReviewerAssignmentBySubmission = async (req, res) => {
 
 exports.createReviewerSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
+    let reviewerDecisionId = req.body.reviewerDecisionId;
     const content = req.body.content;
-    const reviewerDecisionId = req.body.reviewerDecisionId;
     const reviewerId = req.user.userId;
+
+    if (reviewerDecisionId === "") {
+        const decision = await ReviewerDecision.find().limit(1);
+        reviewerDecisionId = decision[0]._id;
+    }
+
     try {
         const reviewerAssignment = await ReviewerAssignment.findOne({
             submissionId: submissionId,

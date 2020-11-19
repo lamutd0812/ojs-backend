@@ -12,6 +12,7 @@ const authRoutes = require('./routes/auth');
 const roleRoutes = require('./routes/roles');
 const stageRoutes = require('./routes/stage');
 const categoryRoutes = require('./routes/category');
+const decisionRoutes = require('./routes/decision');
 const submissionRoutes = require('./routes/submission');
 const reviewProcessRoutes = require('./routes/reviewProcess');
 
@@ -29,6 +30,7 @@ app.use('/auth', authRoutes);
 app.use('/roles', roleRoutes);
 app.use('/stages', stageRoutes);
 app.use('/categories', categoryRoutes);
+app.use('/decisions', decisionRoutes);
 app.use('/submissions', submissionRoutes);
 app.use('/reviews/', reviewProcessRoutes);
 

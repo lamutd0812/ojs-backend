@@ -25,16 +25,16 @@ router.get('/author/:authorId',
     submissionController.getSubmissionsByAuthor);
 
 // Author
-router.post('/', checkAuth,
-    uploadFile.single('attachment'),
+router.post('/',
+    checkAuth,
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
+    uploadFile.single('attachment'),
     submissionController.createNewSubmission);
 
 // Author
 router.put('/:submissionId',
     checkAuth,
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
-
     uploadFile.single('attachment'),
     submissionController.updateSubmission);
 
