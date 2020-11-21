@@ -223,7 +223,7 @@ exports.getReviewerAssignmentsBySubmission = async (req, res) => {
             // })
             .populate({
                 path: 'reviewerSubmissionId',
-                select: '-_id -updatedAt',
+                select: '-updatedAt',
                 populate: { path: 'reviewerDecisionId' }
             })
             .exec();
