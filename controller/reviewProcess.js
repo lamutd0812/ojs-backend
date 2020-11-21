@@ -9,7 +9,7 @@ const SubmissionLog = require('../model/submission_log');
 const ReviewerDecision = require('../model/reviewer_decision');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
-const { USER_ROLES, STAGE, SUBMISSION_STATUS } = require('../config/constant');
+const { USER_ROLES, STAGE, SUBMISSION_STATUS, REVIEWER_DECISION } = require('../config/constant');
 
 exports.getAllEditors = async (req, res) => {
     const submissionId = req.query.submissionId;
@@ -141,7 +141,7 @@ exports.assignReviewer = async (req, res) => {
                 editorId: editorId,
                 dueDate: Date.parse(dueDate),
                 message: message,
-                isAccepted: false
+                isAccepted: false,
             });
             await reviewerAssignment.save();
 
@@ -184,6 +184,17 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
         const editorAssignment = await EditorAssignment.findOne({ submissionId: submissionId })
             .populate('editorId', 'firstname lastname')
             .populate('chiefEditorId', 'firstname lastname')
+            .populate({
+                path: 'reviewerAssignmentId',
+                select: 'reviewerId reviewerSubmissionId',
+                populate: [
+                    { path: 'reviewerId', select: 'firstname lastname' },
+                    {
+                        path: 'reviewerSubmissionId',
+                        populate: { path: 'reviewerDecisionId', select: '-_id' }
+                    },
+                ]
+            })
             .exec();
         res.status(StatusCodes.OK).json({
             editorAssignment: editorAssignment
@@ -202,6 +213,19 @@ exports.getReviewerAssignmentsBySubmission = async (req, res) => {
         const reviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId })
             .populate('reviewerId', 'firstname lastname')
             .populate('editorId', 'firstname lastname')
+            // .populate({
+            //     path: 'submissionId',
+            //     select: 'title submissionStatus authorId',
+            //     populate: [
+            //         { path: 'submissionStatus.stageId', select: 'name value -_id' },
+            //         { path: 'authorId', select: 'firstname lastname' }
+            //     ]
+            // })
+            .populate({
+                path: 'reviewerSubmissionId',
+                select: '-_id -updatedAt',
+                populate: { path: 'reviewerDecisionId' }
+            })
             .exec();
         res.status(StatusCodes.OK).json({
             reviewerAssignments: reviewerAssignments
@@ -219,8 +243,8 @@ exports.getMyEditorAssignments = async (req, res) => {
     try {
         const editorAssignments = await EditorAssignment
             .find({ editorId: editorId })
-            .populate({ path: 'editorId', select: 'firstname lastname' })
-            .populate({ path: 'chiefEditorId', select: 'firstname lastname' })
+            .populate('editorId', 'firstname lastname')
+            .populate('chiefEditorId', 'firstname lastname')
             .populate({
                 path: 'submissionId',
                 select: 'title submissionStatus authorId',
@@ -231,8 +255,15 @@ exports.getMyEditorAssignments = async (req, res) => {
             })
             .populate({
                 path: 'reviewerAssignmentId',
-                select: 'reviewerId',
-                populate: { path: 'reviewerId', select: 'firstname lastname' }
+                select: 'reviewerId reviewerSubmissionId',
+                populate: [
+                    { path: 'reviewerId', select: 'firstname lastname' },
+                    {
+                        path: 'reviewerSubmissionId',
+                        select: 'reviewerDecisionId',
+                        populate: { path: 'reviewerDecisionId', select: '-_id' }
+                    },
+                ]
             })
             .exec();
         res.status(StatusCodes.OK).json({
@@ -381,3 +412,5 @@ exports.editReviewerSubmission = async (req, res) => {
         console.log(err);
     }
 };
+
+

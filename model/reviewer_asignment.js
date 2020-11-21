@@ -26,7 +26,8 @@ const reviewerAssignmentSchema = new mongoose.Schema({
     reviewerSubmissionId: {
         type: mongoose.Schema.Types.ObjectId,
         required: false,
-        ref: 'ReviewerSubmission'
+        ref: 'ReviewerSubmission',
+        default: null
     }
 }, {
     timestamps: true

@@ -22,7 +22,7 @@ router.get('/editor-assignments/:submissionId',
     checkAuth,
     reviewProcessController.getEditorAssignmentBySubmission);
 
-// All role: Get Reviewer Assignment of Submisison
+// All role: Get Reviewer Assignments of Submisison
 router.get('/reviewer-assignments/:submissionId',
     checkAuth,
     reviewProcessController.getReviewerAssignmentsBySubmission);
