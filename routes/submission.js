@@ -15,7 +15,7 @@ router.get('/',
 // Author, Editor, Reviewer
 router.get('/:submissionId',
     checkAuth,
-    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
+    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel, USER_ROLES.CHIEF_EDITOR.permissionLevel]),
     submissionController.getSubmissionById);
 
 // Author, Editor, Reviewer
