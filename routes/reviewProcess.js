@@ -69,4 +69,22 @@ router.put('/reviewer-submission/:submissionId',
     restrict([USER_ROLES.REVIEWER.permissionLevel]),
     reviewProcessController.editReviewerSubmission);
 
+// Editor: submit review for a submission
+router.post('/editor-submission/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.EDITOR.permissionLevel]),
+    reviewProcessController.createEditorSubmission);
+
+// Editor: edit review for a submission
+router.put('/editor-submission/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.EDITOR.permissionLevel]),
+    reviewProcessController.editEditorSubmission);
+
+// Editor: Request Author to Revise Submission (Create Author Assignment)
+router.post('/request-revision/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.EDITOR.permissionLevel]),
+    reviewProcessController.requestSubmissionRevision);
+
 module.exports = router;

@@ -26,7 +26,8 @@ const editorAssignmentSchema = new mongoose.Schema({
     editorSubmissionId: {
         type: mongoose.Schema.Types.ObjectId,
         required: false,
-        ref: 'EditorSubmission'
+        ref: 'EditorSubmission',
+        default: null
     },
     reviewerAssignmentId: [{
         type: mongoose.Schema.Types.ObjectId,

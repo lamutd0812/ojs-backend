@@ -1,12 +1,15 @@
 const User = require('../model/user');
 const UserRole = require('../model/user_role');
 const Submission = require('../model/submission');
+const SubmissionLog = require('../model/submission_log');
 const Stage = require('../model/stage');
 const EditorAssignment = require('../model/editor_assignment');
+const EditorSubmission = require('../model/editor_submission');
+const EditorDecision = require('../model/editor_decision');
 const ReviewerAssignment = require('../model/reviewer_asignment');
 const ReviewerSubmission = require('../model/reviewer_submission');
-const SubmissionLog = require('../model/submission_log');
 const ReviewerDecision = require('../model/reviewer_decision');
+const AuthorAssignment = require('../model/author_assignment');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS, REVIEWER_DECISION } = require('../config/constant');
@@ -126,7 +129,10 @@ exports.assignReviewer = async (req, res) => {
         const prevReviewerAssignment = reviewerAssignments.filter(ra =>
             (ra.submissionId.toString() === submissionId && ra.reviewerId.toString() === reviewerId)
         );
-        if (reviewerAssignments.length >= 3) {
+        const prevEditorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
+        if (prevEditorAssignment.editorId.toString() !== editorId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn không phải biên tập viên được chỉ định cho bài báo này!' });
+        } else if (reviewerAssignments.length >= 3) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Bài báo đã có đủ thẩm định viên!' });
         }
         else if (prevReviewerAssignment.length > 0) {
@@ -155,15 +161,16 @@ exports.assignReviewer = async (req, res) => {
             submission.submissionStatus.stageId = reviewStage._id;
             submission.submissionStatus.status = SUBMISSION_STATUS.ASSIGN_REVIEWER_SUCCESS;
 
-            // add submisison log
-            const reviewer = await User.findById(reviewerId).select('firstname lastname');
-            const log = new SubmissionLog({
-                event: logTemplates.editorAssignReviewer(reviewer.lastname + ' ' + reviewer.firstname),
-                createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
+            // add submisison log if has full reviewer (3/3)
+            if (reviewerAssignments.length == 2) {
+                const log = new SubmissionLog({
+                    event: logTemplates.submissionHasFullReviewer(),
+                    createdAt: new Date()
+                });
+                const newLog = await log.save();
+                submission.submissionLogs.push(newLog._id);
 
+            }
             await submission.save();
             res.status(StatusCodes.OK).json({
                 message: 'Chỉ định thẩm định viên thành công!'
@@ -343,7 +350,7 @@ exports.createReviewerSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     let reviewerDecisionId = req.body.reviewerDecisionId;
     const content = req.body.content;
-    const reviewerId = req.user.userId;
+    const reviewerId = req.user.userId; // nguoi tao
 
     if (reviewerDecisionId === "") {
         const decision = await ReviewerDecision.find().limit(1);
@@ -366,9 +373,20 @@ exports.createReviewerSubmission = async (req, res) => {
 
             reviewerAssignment.reviewerSubmissionId = rs._id;
             await reviewerAssignment.save();
+
+            // add submisison log
+            const submission = await Submission.findById(submissionId);
+            const reviewer = await User.findById(reviewerId).select('firstname lastname');
+            const log = new SubmissionLog({
+                event: logTemplates.reviewerCreateReview(reviewer.lastname + ' ' + reviewer.firstname),
+                createdAt: new Date()
+            });
+            const newLog = await log.save();
+            submission.submissionLogs.push(newLog._id);
+            await submission.save();
+
             res.status(StatusCodes.CREATED).json({
                 message: 'Gửi ý kiến thẩm định thành công!'
-                // reviewerSubmission: rs
             });
         }
     } catch (err) {
@@ -383,7 +401,7 @@ exports.editReviewerSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     const content = req.body.content;
     const reviewerDecisionId = req.body.reviewerDecisionId;
-    const reviewerId = req.user.userId;
+    const reviewerId = req.user.userId; // nguoi tao
     try {
         const reviewerAssignment = await ReviewerAssignment.findOne({
             submissionId: submissionId,
@@ -404,6 +422,138 @@ exports.editReviewerSubmission = async (req, res) => {
                     // reviewerSubmission: rs
                 });
             }
+        }
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+};
+
+exports.createEditorSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    let editorDecisionId = req.body.editorDecisionId;
+    const content = req.body.content;
+    const editorId = req.user.userId; // nguoi tao
+
+    if (editorDecisionId === "") {
+        const decision = await EditorDecision.find().limit(1);
+        editorDecisionId = decision[0]._id;
+    }
+
+    try {
+        const editorAssignment = await EditorAssignment.findOne({
+            submissionId: submissionId,
+            editorId: editorId
+        });
+        if (editorAssignment.editorSubmissionId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến trước đó!' });
+        } else {
+            const editorSubmission = new EditorSubmission({
+                content: content,
+                editorDecisionId: editorDecisionId
+            });
+            const rs = await editorSubmission.save();
+
+            editorAssignment.editorSubmissionId = rs._id;
+            await editorAssignment.save();
+
+            // add submisison log
+            const submission = await Submission.findById(submissionId);
+            const editor = await User.findById(editorId).select('firstname lastname');
+            const log = new SubmissionLog({
+                event: logTemplates.editorSubmitReview(editor.lastname + ' ' + editor.firstname),
+                createdAt: new Date()
+            });
+            const newLog = await log.save();
+            submission.submissionLogs.push(newLog._id);
+            await submission.save();
+
+            res.status(StatusCodes.CREATED).json({
+                message: 'Gửi ý kiến thẩm định thành công!'
+            });
+        }
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+};
+
+exports.editEditorSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const content = req.body.content;
+    const editorDecisionId = req.body.editorDecisionId;
+    const editorId = req.user.editorId; // nguoi tao
+    try {
+        const editorAssignment = await EditorAssignment.findOne({
+            submissionId: submissionId,
+            editorId: editorId
+        });
+        if (!editorAssignment.editorSubmissionId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Không tìm thấy ý kiến thẩm định nào của bạn cho bài báo này!' });
+        } else {
+            const editorSubmission = await EditorSubmission.findById(editorAssignment.editorSubmissionId);
+            if (editorSubmission.isAccepted) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã tiếp nhận ý kiến thẩm định trước đó!' });
+            } else {
+                editorSubmission.content = content;
+                editorSubmission.editorDecisionId = editorDecisionId;
+                await editorSubmission.save();
+                res.status(StatusCodes.OK).json({
+                    message: 'Chỉnh sửa ý kiến thẩm định thành công!',
+                });
+            }
+        }
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+};
+
+exports.requestSubmissionRevision = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const editorId = req.user.userId; // assigner
+    const dueDate = req.body.dueDate;
+    const message = req.body.message;
+    try {
+        const prevEditorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
+        const prevAuthorAssignment = await AuthorAssignment.findOne({ submissionId: submissionId });
+        if (prevEditorAssignment.editorId.toString() !== editorId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn không phải biên tập viên được chỉ định cho bài báo này!' });
+        }
+        else if (prevAuthorAssignment) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã yêu cầu tác giả chỉnh sửa bài báo trước đó!' });
+        } else {
+            const submission = await Submission.findById(submissionId);
+            const authorId = submission.authorId;
+
+            const authorAssignment = new AuthorAssignment({
+                submissionId: submission._id,
+                authorId: authorId,
+                editorId: editorId,
+                dueDate: Date.parse(dueDate),
+                message: message
+            });
+            await authorAssignment.save();
+
+            // add submisison log
+            const editor = await User.findById(editorId).select('firstname lastname');
+            const log = new SubmissionLog({
+                event: logTemplates.editorRequestAuthorRevision(editor.lastname + ' ' + editor.firstname),
+                createdAt: new Date()
+            });
+            const newLog = await log.save();
+            submission.submissionLogs.push(newLog._id);
+            await submission.save();
+
+            res.status(StatusCodes.OK).json({
+                message: 'Yêu cầu tác giả chỉnh sửa bài báo thành công!',
+            });
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
