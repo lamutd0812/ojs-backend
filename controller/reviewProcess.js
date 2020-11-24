@@ -202,6 +202,11 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
                     },
                 ]
             })
+            .populate({
+                path: 'editorSubmissionId',
+                select: '-updatedAt',
+                populate: { path: 'editorDecisionId' }
+            })
             .exec();
         res.status(StatusCodes.OK).json({
             editorAssignment: editorAssignment
@@ -412,7 +417,7 @@ exports.editReviewerSubmission = async (req, res) => {
         } else {
             const reviewerSubmission = await ReviewerSubmission.findById(reviewerAssignment.reviewerSubmissionId);
             if (reviewerSubmission.isAccepted) {
-                res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã tiếp nhận ý kiến thẩm định trước đó!' });
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã tiếp nhận ý kiến thẩm định của bạn trước đó!' });
             } else {
                 reviewerSubmission.content = content;
                 reviewerSubmission.reviewerDecisionId = reviewerDecisionId;
@@ -486,7 +491,7 @@ exports.editEditorSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     const content = req.body.content;
     const editorDecisionId = req.body.editorDecisionId;
-    const editorId = req.user.editorId; // nguoi tao
+    const editorId = req.user.userId; // nguoi tao
     try {
         const editorAssignment = await EditorAssignment.findOne({
             submissionId: submissionId,
@@ -497,7 +502,7 @@ exports.editEditorSubmission = async (req, res) => {
         } else {
             const editorSubmission = await EditorSubmission.findById(editorAssignment.editorSubmissionId);
             if (editorSubmission.isAccepted) {
-                res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã tiếp nhận ý kiến thẩm định trước đó!' });
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Tổng biên tập viên đã tiếp nhận ý kiến thẩm định của bạn trước đó!' });
             } else {
                 editorSubmission.content = content;
                 editorSubmission.editorDecisionId = editorDecisionId;
@@ -530,7 +535,7 @@ exports.requestSubmissionRevision = async (req, res) => {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã yêu cầu tác giả chỉnh sửa bài báo trước đó!' });
         } else {
             const submission = await Submission.findById(submissionId);
-            const authorId = submission.authorId;
+            const authorId = submission.authorId; // assignee
 
             const authorAssignment = new AuthorAssignment({
                 submissionId: submission._id,
@@ -562,5 +567,41 @@ exports.requestSubmissionRevision = async (req, res) => {
         console.log(err);
     }
 };
+
+exports.getAuthorAssignmentBySubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const userId = req.user.userId;
+    const permissionLevel = req.user.role.permissionLevel;
+
+    try {
+        let authorAssignment = null;
+        if (permissionLevel === USER_ROLES.AUTHOR.permissionLevel) {
+            authorAssignment = await AuthorAssignment.findOne({
+                submissionId: submissionId,
+                authorId: userId
+            })
+            .populate('editorId', 'firstname lastname')
+            .populate('authorId', 'firstname lastname')
+            .exec();
+        } else {
+            authorAssignment = await AuthorAssignment.findOne({
+                submissionId: submissionId,
+                editorId: userId
+            })
+            .populate('editorId', 'firstname lastname')
+            .populate('authorId', 'firstname lastname')
+            .exec();;
+        }
+
+        res.status(StatusCodes.OK).json({
+            authorAssignment: authorAssignment
+        });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+        console.log(err);
+    }
+}
 
 

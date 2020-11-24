@@ -22,7 +22,13 @@ const authorAssignmentSchema = new mongoose.Schema({
     },
     message: {
         type: String
-    }
+    },
+    authorRevisionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+        ref: 'AuthorRevision',
+        default: null
+    },
 }, {
     timestamps: true
 });

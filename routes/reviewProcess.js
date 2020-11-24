@@ -82,9 +82,16 @@ router.put('/editor-submission/:submissionId',
     reviewProcessController.editEditorSubmission);
 
 // Editor: Request Author to Revise Submission (Create Author Assignment)
-router.post('/request-revision/:submissionId',
+router.post('/request-author-revision/:submissionId',
     checkAuth,
     restrict([USER_ROLES.EDITOR.permissionLevel]),
     reviewProcessController.requestSubmissionRevision);
+
+// Author and Editor get Author Assignment
+router.get('/author-assignment/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.EDITOR.permissionLevel, USER_ROLES.AUTHOR.permissionLevel]),
+    reviewProcessController.getAuthorAssignmentBySubmission
+);
 
 module.exports = router;
