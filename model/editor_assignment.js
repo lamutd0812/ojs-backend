@@ -33,7 +33,12 @@ const editorAssignmentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: false,
         ref: 'ReviewerAssignment'
-    }]
+    }],
+    authorAssignmentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+        ref: 'AuthorAssignment'
+    }
 }, {
     timestamps: true
 });

@@ -30,3 +30,7 @@ exports.editorSubmitReview = (editorName) => {
 exports.editorRequestAuthorRevision = (editorName) => {
     return 'Biên tập viên ' + editorName + ' đã yêu cầu tác giả chỉnh sửa bài báo.';
 };
+
+exports.authorSubmitRevision = (authorName) => {
+    return 'Tác giả ' + authorName + ' đã nộp bản chỉnh sửa bài báo.';
+};

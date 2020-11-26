@@ -2,6 +2,7 @@ const express = require('express');
 const { USER_ROLES } = require('../config/constant');
 const reviewProcessController = require('../controller/reviewProcess');
 const { checkAuth, restrict } = require('../middlewares/check-auth');
+const { uploadFile } = require('../services/file-services');
 
 const router = express.Router();
 
@@ -23,9 +24,9 @@ router.get('/editor-assignments/:submissionId',
     reviewProcessController.getEditorAssignmentBySubmission);
 
 // All role: Get Reviewer Assignments of Submisison
-router.get('/reviewer-assignments/:submissionId',
-    checkAuth,
-    reviewProcessController.getReviewerAssignmentsBySubmission);
+// router.get('/reviewer-assignments/:submissionId',
+//     checkAuth,
+//     reviewProcessController.getReviewerAssignmentsBySubmission);
 
 // Editor: get all submission and assignment that assigned
 router.get('/editor-assignments/my/all',
@@ -93,5 +94,12 @@ router.get('/author-assignment/:submissionId',
     restrict([USER_ROLES.EDITOR.permissionLevel, USER_ROLES.AUTHOR.permissionLevel]),
     reviewProcessController.getAuthorAssignmentBySubmission
 );
+
+// Author Submit Revision of a Submission
+router.put('/author-assignment/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.AUTHOR.permissionLevel]),
+    uploadFile.single('attachment'),
+    reviewProcessController.authorSubmitRevision);
 
 module.exports = router;

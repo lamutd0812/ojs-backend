@@ -10,9 +10,11 @@ const ReviewerAssignment = require('../model/reviewer_asignment');
 const ReviewerSubmission = require('../model/reviewer_submission');
 const ReviewerDecision = require('../model/reviewer_decision');
 const AuthorAssignment = require('../model/author_assignment');
+const AuthorRevision = require('../model/author_revision');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, SUBMISSION_STATUS, REVIEWER_DECISION } = require('../config/constant');
+const { deleteFile } = require('../services/file-services');
 
 exports.getAllEditors = async (req, res) => {
     const submissionId = req.query.submissionId;
@@ -219,36 +221,28 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
     }
 };
 
-exports.getReviewerAssignmentsBySubmission = async (req, res) => {
-    const submissionId = req.params.submissionId;
-    try {
-        const reviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId })
-            .populate('reviewerId', 'firstname lastname')
-            .populate('editorId', 'firstname lastname')
-            // .populate({
-            //     path: 'submissionId',
-            //     select: 'title submissionStatus authorId',
-            //     populate: [
-            //         { path: 'submissionStatus.stageId', select: 'name value -_id' },
-            //         { path: 'authorId', select: 'firstname lastname' }
-            //     ]
-            // })
-            .populate({
-                path: 'reviewerSubmissionId',
-                select: '-updatedAt',
-                populate: { path: 'reviewerDecisionId' }
-            })
-            .exec();
-        res.status(StatusCodes.OK).json({
-            reviewerAssignments: reviewerAssignments
-        });
-    } catch (err) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
-        });
-        console.log(err);
-    }
-};
+// exports.getReviewerAssignmentsBySubmission = async (req, res) => {
+//     const submissionId = req.params.submissionId;
+//     try {
+//         const reviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId })
+//             .populate('reviewerId', 'firstname lastname')
+//             .populate('editorId', 'firstname lastname')
+//             .populate({
+//                 path: 'reviewerSubmissionId',
+//                 select: '-updatedAt',
+//                 populate: { path: 'reviewerDecisionId' }
+//             })
+//             .exec();
+//         res.status(StatusCodes.OK).json({
+//             reviewerAssignments: reviewerAssignments
+//         });
+//     } catch (err) {
+//         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//             error: err
+//         });
+//         console.log(err);
+//     }
+// };
 
 exports.getMyEditorAssignments = async (req, res) => {
     const editorId = req.user.userId;
@@ -367,8 +361,19 @@ exports.createReviewerSubmission = async (req, res) => {
             submissionId: submissionId,
             reviewerId: reviewerId
         });
+        const editorAssignment = await EditorAssignment.exists({
+            submissionId: submissionId,
+            reviewerAssignmentId: reviewerAssignment._id
+        });
+        const authorAssignment = await AuthorAssignment.exists({
+            submissionId: submissionId,
+            editorId: reviewerAssignment.editorId
+        });
+
         if (reviewerAssignment.reviewerSubmissionId) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến trước đó!' });
+        } else if (editorAssignment.editorSubmissionId || authorAssignment) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định!' });
         } else {
             const reviewerSubmission = new ReviewerSubmission({
                 content: content,
@@ -412,8 +417,19 @@ exports.editReviewerSubmission = async (req, res) => {
             submissionId: submissionId,
             reviewerId: reviewerId
         });
+        const editorAssignment = await EditorAssignment.exists({
+            submissionId: submissionId,
+            reviewerAssignmentId: reviewerAssignment._id
+        });
+        const authorAssignment = await AuthorAssignment.exists({
+            submissionId: submissionId,
+            editorId: reviewerAssignment.editorId
+        });
+
         if (!reviewerAssignment.reviewerSubmissionId) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Không tìm thấy ý kiến thẩm định nào của bạn cho bài báo này!' });
+        } else if (editorAssignment.editorSubmissionId || authorAssignment) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định!' });
         } else {
             const reviewerSubmission = await ReviewerSubmission.findById(reviewerAssignment.reviewerSubmissionId);
             if (reviewerSubmission.isAccepted) {
@@ -527,7 +543,7 @@ exports.requestSubmissionRevision = async (req, res) => {
     const message = req.body.message;
     try {
         const prevEditorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
-        const prevAuthorAssignment = await AuthorAssignment.findOne({ submissionId: submissionId });
+        const prevAuthorAssignment = await AuthorAssignment.exists({ submissionId: submissionId });
         if (prevEditorAssignment.editorId.toString() !== editorId) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn không phải biên tập viên được chỉ định cho bài báo này!' });
         }
@@ -545,6 +561,10 @@ exports.requestSubmissionRevision = async (req, res) => {
                 message: message
             });
             await authorAssignment.save();
+
+            // add ref to editor assignment
+            prevEditorAssignment.authorAssignmentId = authorAssignment._id;
+            await prevEditorAssignment.save();
 
             // add submisison log
             const editor = await User.findById(editorId).select('firstname lastname');
@@ -580,17 +600,17 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
                 submissionId: submissionId,
                 authorId: userId
             })
-            .populate('editorId', 'firstname lastname')
-            .populate('authorId', 'firstname lastname')
-            .exec();
+                .populate('editorId', 'firstname lastname')
+                .populate('authorId', 'firstname lastname')
+                .exec();
         } else {
             authorAssignment = await AuthorAssignment.findOne({
                 submissionId: submissionId,
                 editorId: userId
             })
-            .populate('editorId', 'firstname lastname')
-            .populate('authorId', 'firstname lastname')
-            .exec();;
+                .populate('editorId', 'firstname lastname')
+                .populate('authorId', 'firstname lastname')
+                .exec();;
         }
 
         res.status(StatusCodes.OK).json({
@@ -602,6 +622,77 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
         });
         console.log(err);
     }
-}
+};
+
+exports.authorSubmitRevision = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const authorId = req.user.userId;
+    let categoryId = req.body.categoryId;
+    const title = req.body.title;
+    const abstract = req.body.abstract;
+
+    try {
+        const submission = await Submission.findOne({
+            _id: submissionId,
+            authorId: authorId
+        });
+
+        const authorAssignment = await AuthorAssignment.findOne({
+            submissionId: submissionId,
+            authorId: authorId
+        });
+
+        if (categoryId === "") {
+            categoryId = submission.categoryId.toString();
+        }
+
+        if (!submission || !authorAssignment) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn không phải tác giả của bài báo này!' });
+        } else if (req.error) { // in file-service upload error.
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                error: req.error
+            });
+        } else {
+            submission.categoryId = categoryId;
+            submission.title = title;
+            submission.abstract = abstract;
+            if (req.file) {
+                // delete current attachmentUrl
+                const result = deleteFile(submission.attachmentUrl);
+                if (result.error) {
+                    res.status(StatusCodes.NOT_FOUND).json({
+                        message: "Delete Attachment Failed.",
+                        error: result.error
+                    });
+                } else {
+                    submission.attachmentFile = req.file.originalname;
+                    submission.attachmentUrl = req.file.location;
+                }
+            }
+
+            // create author revision
+            const authorRevision = new AuthorRevision();
+            const newAuthorRevision = await authorRevision.save();
+            authorAssignment.authorRevisionId = newAuthorRevision._id;
+            await authorAssignment.save();
+
+            // update logs
+            const log = new SubmissionLog({
+                event: logTemplates.authorSubmitRevision(req.user.fullname),
+                createdAt: new Date()
+            });
+            const newLog = await log.save();
+            submission.submissionLogs.push(newLog._id);
+
+            const updatedSubmission = await submission.save();
+            res.status(StatusCodes.OK).json({ submission: updatedSubmission });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
 
 
