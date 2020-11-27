@@ -158,20 +158,18 @@ exports.assignReviewer = async (req, res) => {
             editorAssignment.reviewerAssignmentId.push(reviewerAssignment._id);
             await editorAssignment.save();
 
-            // update submission status
-            const reviewStage = await Stage.findOne(STAGE.REVIEW);
-            submission.submissionStatus.stageId = reviewStage._id;
-            submission.submissionStatus.status = SUBMISSION_STATUS.ASSIGN_REVIEWER_SUCCESS;
-
-            // add submisison log if has full reviewer (3/3)
+            // add submisison log and update submission status if has full reviewer (3/3)
             if (reviewerAssignments.length == 2) {
+                const reviewStage = await Stage.findOne(STAGE.REVIEW);
+                submission.submissionStatus.stageId = reviewStage._id;
+                submission.submissionStatus.status = SUBMISSION_STATUS.ASSIGN_REVIEWERS_SUCCESS;
+
                 const log = new SubmissionLog({
                     event: logTemplates.submissionHasFullReviewer(),
                     createdAt: new Date()
                 });
                 const newLog = await log.save();
                 submission.submissionLogs.push(newLog._id);
-
             }
             await submission.save();
             res.status(StatusCodes.OK).json({
@@ -600,6 +598,7 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
                 submissionId: submissionId,
                 authorId: userId
             })
+                .populate('authorRevisionId')
                 .populate('editorId', 'firstname lastname')
                 .populate('authorId', 'firstname lastname')
                 .exec();
@@ -608,6 +607,7 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
                 submissionId: submissionId,
                 editorId: userId
             })
+                .populate('authorRevisionId')
                 .populate('editorId', 'firstname lastname')
                 .populate('authorId', 'firstname lastname')
                 .exec();;

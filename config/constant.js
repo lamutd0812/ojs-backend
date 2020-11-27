@@ -84,6 +84,11 @@ exports.REVIEWER_DECISION = {
 exports.SUBMISSION_STATUS = {
     AUTHOR_SUBMIT_SUCCESS: 'Đăng bài lên hệ thống thành công.',
     ASSIGN_EDITOR_SUCCESS: 'Biên tập viên đã được chỉ định.',
-    ASSIGN_REVIEWER_SUCCESS: 'Thẩm định viên đã được chỉ định.',
+    ASSIGN_REVIEWERS_SUCCESS: 'Thẩm định viên đã được chỉ định đủ.',
+    REVIEWERS_COMPLETED_REVIEW: 'Tất cả thẩm định viên đã nộp ý kiến thâm định.',
+    EDITOR_REQUEST_REVISION: ' Biên tập viên đã yêu cầu tác giả chỉnh sửa bài báo.',
+    EDITOR_SUBMIT_REVIEW: 'Biên tập viên đã nộp ý kiến thẩm định.',
+    CHIEF_EDITOR_ACCEPTED_SUBMISSION: 'Tổng biên tập đã chấp nhận bài báo.',
+    CHIEF_EDITOR_DECLINE_SUBMISSION: 'Tổng biên tập đã từ chối bài báo.',
     REVIEW_IN_PROCESS: 'Quá trình thẩm định đang diễn ra',
 };
