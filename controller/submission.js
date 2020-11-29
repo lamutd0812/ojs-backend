@@ -13,7 +13,6 @@ exports.getAllSubmissions = async (req, res) => {
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
-            .populate({ path: 'submissionLogs', select: 'event createdAt -_id', options: { sort: { _id: -1 } } })
             .exec();
         res.status(StatusCodes.OK).json({ submissions: submissions });
     } catch (err) {
@@ -31,7 +30,6 @@ exports.getSubmissionsByAuthor = async (req, res) => {
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
-            .populate({ path: 'submissionLogs', select: 'event createdAt -_id', options: { sort: { _id: -1 } } })
             .exec();
         res.status(StatusCodes.OK).json({ submissions: submissions });
     } catch (err) {
@@ -49,7 +47,6 @@ exports.getSubmissionById = async (req, res) => {
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
-            .populate({ path: 'submissionLogs', select: 'event createdAt -_id', options: { sort: { _id: -1 } } })
             .exec();
         res.status(StatusCodes.OK).json({ submission: submission });
     } catch (err) {
@@ -150,7 +147,7 @@ exports.updateSubmission = async (req, res) => {
 
             // update logs
             const log = {
-                event: logTemplates.authorUpdateArticle(req.user.fullname),
+                event: logTemplates.authorUpdateArticle(),
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);

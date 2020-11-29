@@ -98,9 +98,8 @@ exports.assignEditor = async (req, res) => {
             submission.stageId = reviewStage._id;
 
             // add submission log
-            const editor = await User.findById(editorId).select('firstname lastname');
             const log = {
-                event: logTemplates.chiefEditorAssignEditor(editor.lastname + ' ' + editor.firstname),
+                event: logTemplates.chiefEditorAssignEditor(),
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);
@@ -452,9 +451,8 @@ exports.createEditorSubmission = async (req, res) => {
 
             // add submission log
             const submission = await Submission.findById(submissionId);
-            const editor = await User.findById(editorId).select('firstname lastname');
             const log = {
-                event: logTemplates.editorSubmitReview(editor.lastname + ' ' + editor.firstname),
+                event: logTemplates.editorSubmitReview(),
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);
@@ -536,9 +534,8 @@ exports.requestSubmissionRevision = async (req, res) => {
             await prevEditorAssignment.save();
 
             // add submission log
-            const editor = await User.findById(editorId).select('firstname lastname');
             const log = {
-                event: logTemplates.editorRequestAuthorRevision(editor.lastname + ' ' + editor.firstname),
+                event: logTemplates.editorRequestAuthorRevision(),
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);
@@ -648,7 +645,7 @@ exports.authorSubmitRevision = async (req, res) => {
 
             // update logs
             const log = {
-                event: logTemplates.authorSubmitRevision(req.user.fullname),
+                event: logTemplates.authorSubmitRevision(),
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);
@@ -709,7 +706,9 @@ exports.acceptSubmission = async (req, res) => {
             });
             await article.save();
 
-            res.status(StatusCodes.OK).json({ article: article });
+            res.status(StatusCodes.OK).json({
+                message: 'Bài báo đã được chấp nhận xuất bản!'
+            });
         }
     } catch (err) {
         console.log(err);
