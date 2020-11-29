@@ -357,11 +357,11 @@ exports.createReviewerSubmission = async (req, res) => {
             // add submission log
             const submission = await Submission.findById(submissionId);
             const reviewer = await User.findById(reviewerId).select('firstname lastname');
-            const log = new {
+            const log = {
                 event: logTemplates.reviewerCreateReview(reviewer.lastname + ' ' + reviewer.firstname),
                 createdAt: new Date()
             };
-            submission.submission.push(log);
+            submission.submissionLogs.push(log);
             await submission.save();
 
             res.status(StatusCodes.CREATED).json({
