@@ -1,10 +1,8 @@
 const Submission = require('../model/submission');
-// const SubmissionStatus = require('../model/submission_status');
-const SubmissionLog = require('../model/submission_log');
 const Category = require('../model/category');
 const Stage = require('../model/stage');
 const { StatusCodes } = require('http-status-codes');
-const { STAGE, SUBMISSION_STATUS } = require('../config/constant');
+const { STAGE } = require('../config/constant');
 const logTemplates = require('../utils/log-templates');
 
 const { deleteFile } = require('../services/file-services');
@@ -14,7 +12,7 @@ exports.getAllSubmissions = async (req, res) => {
         const submissions = await Submission.find().sort({ _id: -1 })
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
-            .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
+            .populate({ path: 'stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id', options: { sort: { _id: -1 } } })
             .exec();
         res.status(StatusCodes.OK).json({ submissions: submissions });
@@ -32,7 +30,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
         const submissions = await Submission.find({ authorId: authorId }).sort({ _id: -1 })
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
-            .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
+            .populate({ path: 'stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id', options: { sort: { _id: -1 } } })
             .exec();
         res.status(StatusCodes.OK).json({ submissions: submissions });
@@ -50,7 +48,7 @@ exports.getSubmissionById = async (req, res) => {
         const submission = await Submission.findById(submissionId)
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
-            .populate({ path: 'submissionStatus.stageId', select: 'name value -_id' })
+            .populate({ path: 'stageId', select: 'name value -_id' })
             .populate({ path: 'submissionLogs', select: 'event createdAt -_id', options: { sort: { _id: -1 } } })
             .exec();
         res.status(StatusCodes.OK).json({ submission: submission });
@@ -85,12 +83,11 @@ exports.createNewSubmission = async (req, res) => {
 
             // create logs
             let logs = [];
-            const log = new SubmissionLog({
+            const log = {
                 event: logTemplates.authorSubmitArticle(req.user.fullname),
                 createdAt: new Date()
-            });
-            const newLog = await log.save();
-            logs.push(newLog._id);
+            };
+            logs.push(log);
 
             if (req.file) {
                 attachmentFile = req.file.originalname;
@@ -103,10 +100,7 @@ exports.createNewSubmission = async (req, res) => {
                 attachmentFile: attachmentFile,
                 attachmentUrl: attachmentUrl,
                 authorId: authorId,
-                submissionStatus: {
-                    status: SUBMISSION_STATUS.AUTHOR_SUBMIT_SUCCESS,
-                    stageId: submissionStage._id
-                },
+                stageId: submissionStage._id,
                 submissionLogs: logs
             });
             const newSubmission = await submission.save();
@@ -155,12 +149,11 @@ exports.updateSubmission = async (req, res) => {
             }
 
             // update logs
-            const log = new SubmissionLog({
+            const log = {
                 event: logTemplates.authorUpdateArticle(req.user.fullname),
                 createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
+            };
+            submission.submissionLogs.push(log);
 
             const updatedSubmission = await submission.save();
             res.status(StatusCodes.OK).json({ submission: updatedSubmission });
@@ -186,10 +179,6 @@ exports.deleteSubmission = async (req, res) => {
         } else {
             // delete submission
             await Submission.findByIdAndDelete(submissionId);
-            // delete logs of this submission.
-            submission.submissionLogs.forEach(async logId => {
-                await SubmissionLog.findByIdAndDelete(logId);
-            });
             res.status(StatusCodes.OK).json({
                 message: "Submission Deleted.",
             });

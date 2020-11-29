@@ -1,7 +1,6 @@
 const User = require('../model/user');
 const UserRole = require('../model/user_role');
 const Submission = require('../model/submission');
-const SubmissionLog = require('../model/submission_log');
 const Stage = require('../model/stage');
 const EditorAssignment = require('../model/editor_assignment');
 const EditorSubmission = require('../model/editor_submission');
@@ -11,16 +10,19 @@ const ReviewerSubmission = require('../model/reviewer_submission');
 const ReviewerDecision = require('../model/reviewer_decision');
 const AuthorAssignment = require('../model/author_assignment');
 const AuthorRevision = require('../model/author_revision');
+const ChiefEditorSubmission = require('../model/chief_editor_submission');
+const ChiefEditorDecision = require('../model/chief_editor_decision');
+const Article = require('../model/article');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
-const { USER_ROLES, STAGE, SUBMISSION_STATUS, REVIEWER_DECISION } = require('../config/constant');
+const { USER_ROLES, STAGE, SUBMISSION_STATUS, CHIEF_EDITOR_DECISION } = require('../config/constant');
 const { deleteFile } = require('../services/file-services');
 
 exports.getAllEditors = async (req, res) => {
     const submissionId = req.query.submissionId;
     try {
         let ids = [];
-        // Not assign Editor if Editor is Submisison's Author
+        // Not assign Editor if Editor is Submission's Author
         const submission = await Submission.findById(submissionId).select('authorId');
         ids.push(submission.authorId);
 
@@ -47,7 +49,7 @@ exports.getAllReviewers = async (req, res) => {
             .select('reviewerId -_id');
 
         let ids = [];
-        // Not Assign Reviewer if Reviewer is Submisison's Author
+        // Not Assign Reviewer if Reviewer is Submission's Author
         const submission = await Submission.findById(submissionId).select('authorId');
         ids.push(submission.authorId);
         reviewerAssignments.map(assignment => {
@@ -91,19 +93,17 @@ exports.assignEditor = async (req, res) => {
             });
             await editorAssignment.save();
 
-            // update submission status
+            // update submission stage
             const reviewStage = await Stage.findOne(STAGE.REVIEW);
-            submission.submissionStatus.stageId = reviewStage._id;
-            submission.submissionStatus.status = SUBMISSION_STATUS.ASSIGN_EDITOR_SUCCESS;
+            submission.stageId = reviewStage._id;
 
-            // add submisison log
+            // add submission log
             const editor = await User.findById(editorId).select('firstname lastname');
-            const log = new SubmissionLog({
+            const log = {
                 event: logTemplates.chiefEditorAssignEditor(editor.lastname + ' ' + editor.firstname),
                 createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
+            };
+            submission.submissionLogs.push(log);
 
             await submission.save();
             // const savedSunmission = await submission.save();
@@ -158,18 +158,13 @@ exports.assignReviewer = async (req, res) => {
             editorAssignment.reviewerAssignmentId.push(reviewerAssignment._id);
             await editorAssignment.save();
 
-            // add submisison log and update submission status if has full reviewer (3/3)
+            // add submission logif has full reviewer (3/3)
             if (reviewerAssignments.length == 2) {
-                const reviewStage = await Stage.findOne(STAGE.REVIEW);
-                submission.submissionStatus.stageId = reviewStage._id;
-                submission.submissionStatus.status = SUBMISSION_STATUS.ASSIGN_REVIEWERS_SUCCESS;
-
-                const log = new SubmissionLog({
+                const log = {
                     event: logTemplates.submissionHasFullReviewer(),
                     createdAt: new Date()
-                });
-                const newLog = await log.save();
-                submission.submissionLogs.push(newLog._id);
+                };
+                submission.submissionLogs.push(log);
             }
             await submission.save();
             res.status(StatusCodes.OK).json({
@@ -219,29 +214,6 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
     }
 };
 
-// exports.getReviewerAssignmentsBySubmission = async (req, res) => {
-//     const submissionId = req.params.submissionId;
-//     try {
-//         const reviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId })
-//             .populate('reviewerId', 'firstname lastname')
-//             .populate('editorId', 'firstname lastname')
-//             .populate({
-//                 path: 'reviewerSubmissionId',
-//                 select: '-updatedAt',
-//                 populate: { path: 'reviewerDecisionId' }
-//             })
-//             .exec();
-//         res.status(StatusCodes.OK).json({
-//             reviewerAssignments: reviewerAssignments
-//         });
-//     } catch (err) {
-//         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-//             error: err
-//         });
-//         console.log(err);
-//     }
-// };
-
 exports.getMyEditorAssignments = async (req, res) => {
     const editorId = req.user.userId;
     try {
@@ -251,9 +223,9 @@ exports.getMyEditorAssignments = async (req, res) => {
             .populate('chiefEditorId', 'firstname lastname')
             .populate({
                 path: 'submissionId',
-                select: 'title submissionStatus authorId',
+                select: 'title stageId authorId',
                 populate: [
-                    { path: 'submissionStatus.stageId', select: 'name value -_id' },
+                    { path: 'stageId', select: 'name value -_id' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             })
@@ -269,6 +241,7 @@ exports.getMyEditorAssignments = async (req, res) => {
                     },
                 ]
             })
+            .populate('authorAssignmentId', 'authorRevisionId -_id')
             .exec();
         res.status(StatusCodes.OK).json({
             editorAssignments: editorAssignments
@@ -290,9 +263,9 @@ exports.getMyReviewerAssignments = async (req, res) => {
             .populate({ path: 'editorId', select: 'firstname lastname' })
             .populate({
                 path: 'submissionId',
-                select: 'title submissionStatus authorId',
+                select: 'title stageId authorId',
                 populate: [
-                    { path: 'submissionStatus.stageId', select: 'name value -_id' },
+                    { path: 'stageId', select: 'name value -_id' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             }).exec();
@@ -320,9 +293,9 @@ exports.getMyReviewerAssignmentBySubmission = async (req, res) => {
             .populate({ path: 'editorId', select: 'firstname lastname' })
             .populate({
                 path: 'submissionId',
-                select: 'title submissionStatus authorId',
+                select: 'title stageId authorId',
                 populate: [
-                    { path: 'submissionStatus.stageId', select: 'name value -_id' },
+                    { path: 'stageId', select: 'name value -_id' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             })
@@ -382,15 +355,14 @@ exports.createReviewerSubmission = async (req, res) => {
             reviewerAssignment.reviewerSubmissionId = rs._id;
             await reviewerAssignment.save();
 
-            // add submisison log
+            // add submission log
             const submission = await Submission.findById(submissionId);
             const reviewer = await User.findById(reviewerId).select('firstname lastname');
-            const log = new SubmissionLog({
+            const log = new {
                 event: logTemplates.reviewerCreateReview(reviewer.lastname + ' ' + reviewer.firstname),
                 createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
+            };
+            submission.submission.push(log);
             await submission.save();
 
             res.status(StatusCodes.CREATED).json({
@@ -478,15 +450,14 @@ exports.createEditorSubmission = async (req, res) => {
             editorAssignment.editorSubmissionId = rs._id;
             await editorAssignment.save();
 
-            // add submisison log
+            // add submission log
             const submission = await Submission.findById(submissionId);
             const editor = await User.findById(editorId).select('firstname lastname');
-            const log = new SubmissionLog({
+            const log = {
                 event: logTemplates.editorSubmitReview(editor.lastname + ' ' + editor.firstname),
                 createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
+            };
+            submission.submissionLogs.push(log);
             await submission.save();
 
             res.status(StatusCodes.CREATED).json({
@@ -564,14 +535,13 @@ exports.requestSubmissionRevision = async (req, res) => {
             prevEditorAssignment.authorAssignmentId = authorAssignment._id;
             await prevEditorAssignment.save();
 
-            // add submisison log
+            // add submission log
             const editor = await User.findById(editorId).select('firstname lastname');
-            const log = new SubmissionLog({
+            const log = {
                 event: logTemplates.editorRequestAuthorRevision(editor.lastname + ' ' + editor.firstname),
                 createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
+            };
+            submission.submissionLogs.push(log);
             await submission.save();
 
             res.status(StatusCodes.OK).json({
@@ -677,15 +647,116 @@ exports.authorSubmitRevision = async (req, res) => {
             await authorAssignment.save();
 
             // update logs
-            const log = new SubmissionLog({
+            const log = {
                 event: logTemplates.authorSubmitRevision(req.user.fullname),
                 createdAt: new Date()
-            });
-            const newLog = await log.save();
-            submission.submissionLogs.push(newLog._id);
+            };
+            submission.submissionLogs.push(log);
 
             const updatedSubmission = await submission.save();
             res.status(StatusCodes.OK).json({ submission: updatedSubmission });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.acceptSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const content = req.body.content;
+    const chiefEditorId = req.user.userId;
+
+    try {
+        const prevCeSubmission = await ChiefEditorSubmission.exists({
+            submissionId: submissionId,
+            chiefEditorId: chiefEditorId
+        });
+        if (prevCeSubmission) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
+        } else {
+            const submission = await Submission.findById(submissionId);
+
+            // create chief editor submission
+            const ceDecision = await ChiefEditorDecision.findOne(CHIEF_EDITOR_DECISION.ACCEPT_SUBMISSION);
+            const ceSubmission = new ChiefEditorSubmission({
+                submissionId: submissionId,
+                chiefEditorId: chiefEditorId,
+                content: content,
+                chiefEditorDecisionId: ceDecision._id
+            });
+            await ceSubmission.save();
+
+            // sendEmail to Author
+
+            // update submission stage to PUBLISHED
+            const publishedStage = await Stage.findOne(STAGE.PUBLISHED);
+            submission.stageId = publishedStage._id;
+
+            // add submission log
+            const log = {
+                event: logTemplates.chiefEditorAcceptSubmission(),
+                createdAt: new Date()
+            };
+            submission.submissionLogs.push(log);
+            await submission.save();
+
+            // publish Article;
+            const article = new Article({
+                submissionId: submissionId
+            });
+            await article.save();
+
+            res.status(StatusCodes.OK).json({ article: article });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.declineSubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    const content = req.body.content;
+    const chiefEditorId = req.user.userId;
+
+    try {
+        const prevCeSubmission = await ChiefEditorSubmission.exists({
+            submissionId: submissionId,
+            chiefEditorId: chiefEditorId
+        });
+        if (prevCeSubmission) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
+        } else {
+            const submission = await Submission.findById(submissionId);
+
+            // create chief editor submission
+            const ceDecision = await ChiefEditorDecision.findOne(CHIEF_EDITOR_DECISION.DECLINE_SUBMISSION);
+            const ceSubmission = new ChiefEditorSubmission({
+                submissionId: submissionId,
+                chiefEditorId: chiefEditorId,
+                content: content,
+                chiefEditorDecisionId: ceDecision._id
+            });
+            await ceSubmission.save();
+
+            // sendEmail to Author
+
+            // add submission log
+            const log = {
+                event: logTemplates.chiefEditorDeclineSubmission(),
+                createdAt: new Date()
+            };
+            submission.submissionLogs.push(log);
+            await submission.save();
+
+            res.status(StatusCodes.OK).json({
+                message: 'Từ chối bài báo thành công!'
+            });
         }
     } catch (err) {
         console.log(err);

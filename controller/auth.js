@@ -17,8 +17,8 @@ exports.signup = async (req, res) => {
     const biography = req.body.biography;
     const toBeReviewer = req.body.toBeReviewer;
     try {
-        const userCheck = await User.findOne({ username: username });
-        const emailCheck = await User.findOne({ email: email });
+        const userCheck = await User.exists({ username: username });
+        const emailCheck = await User.exists({ email: email });
         if (userCheck || emailCheck) {
             if (userCheck) {
                 res.status(StatusCodes.UNAUTHORIZED).json({

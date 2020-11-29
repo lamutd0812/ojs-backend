@@ -34,3 +34,11 @@ exports.editorRequestAuthorRevision = (editorName) => {
 exports.authorSubmitRevision = (authorName) => {
     return 'Tác giả ' + authorName + ' đã nộp bản chỉnh sửa bài báo.';
 };
+
+exports.chiefEditorAcceptSubmission = () => {
+    return 'Bài báo đã được chấp nhận xuất bản.';
+}
+
+exports.chiefEditorDeclineSubmission = () => {
+    return 'Tổng biên tâp đã từ chối bài báo';
+}

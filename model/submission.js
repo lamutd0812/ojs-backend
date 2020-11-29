@@ -31,22 +31,22 @@ const submissionSchema = new mongoose.Schema({
         required: true,
         ref: 'User'
     },
-    submissionStatus: {
-        status: {
+    submissionLogs: [{
+        _id: false,
+        event: {
             type: String,
             required: true
         },
-        stageId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-            ref: 'Stage'
+        createdAt: {
+            type: Date,
+            required: true
         }
-    },
-    submissionLogs: [{
+    }],
+    stageId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'SubmissionLog'
-    }]
+        ref: 'Stage'
+    },
 }, {
     timestamps: true
 });

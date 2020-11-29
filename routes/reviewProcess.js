@@ -23,11 +23,6 @@ router.get('/editor-assignments/:submissionId',
     checkAuth,
     reviewProcessController.getEditorAssignmentBySubmission);
 
-// All role: Get Reviewer Assignments of Submisison
-// router.get('/reviewer-assignments/:submissionId',
-//     checkAuth,
-//     reviewProcessController.getReviewerAssignmentsBySubmission);
-
 // Editor: get all submission and assignment that assigned
 router.get('/editor-assignments/my/all',
     checkAuth,
@@ -101,5 +96,17 @@ router.put('/author-assignment/:submissionId',
     restrict([USER_ROLES.AUTHOR.permissionLevel]),
     uploadFile.single('attachment'),
     reviewProcessController.authorSubmitRevision);
+
+// Chief Editor Accept Submission
+router.put('/accept-submission/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
+    reviewProcessController.acceptSubmission);
+
+// Chief Editor Decline Submission
+router.put('/decline-submission/:submissionId',
+    checkAuth,
+    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
+    reviewProcessController.declineSubmission);
 
 module.exports = router;
