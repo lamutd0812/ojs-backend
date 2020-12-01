@@ -331,7 +331,7 @@ exports.createReviewerSubmission = async (req, res) => {
             submissionId: submissionId,
             reviewerId: reviewerId
         });
-        const editorAssignment = await EditorAssignment.exists({
+        const editorAssignment = await EditorAssignment.findOne({
             submissionId: submissionId,
             reviewerAssignmentId: reviewerAssignment._id
         });
@@ -386,7 +386,7 @@ exports.editReviewerSubmission = async (req, res) => {
             submissionId: submissionId,
             reviewerId: reviewerId
         });
-        const editorAssignment = await EditorAssignment.exists({
+        const editorAssignment = await EditorAssignment.findOne({
             submissionId: submissionId,
             reviewerAssignmentId: reviewerAssignment._id
         });
@@ -433,12 +433,18 @@ exports.createEditorSubmission = async (req, res) => {
     }
 
     try {
+        const ceSubmission = await ChiefEditorSubmission.exists({
+            submissionId: submissionId
+        });
         const editorAssignment = await EditorAssignment.findOne({
             submissionId: submissionId,
             editorId: editorId
         });
-        if (editorAssignment.editorSubmissionId) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến trước đó!' });
+
+        if (ceSubmission) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định cho bài báo này!' });
+        } else if (!editorAssignment.editorSubmissionId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Không tìm thấy ý kiến thẩm định nào của bạn cho bài báo này!' });
         } else {
             const editorSubmission = new EditorSubmission({
                 content: content,
@@ -476,11 +482,17 @@ exports.editEditorSubmission = async (req, res) => {
     const editorDecisionId = req.body.editorDecisionId;
     const editorId = req.user.userId; // nguoi tao
     try {
+        const ceSubmission = await ChiefEditorSubmission.exists({
+            submissionId: submissionId
+        });
         const editorAssignment = await EditorAssignment.findOne({
             submissionId: submissionId,
             editorId: editorId
         });
-        if (!editorAssignment.editorSubmissionId) {
+
+        if (ceSubmission) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định cho bài báo này!' });
+        } else if (!editorAssignment.editorSubmissionId) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Không tìm thấy ý kiến thẩm định nào của bạn cho bài báo này!' });
         } else {
             const editorSubmission = await EditorSubmission.findById(editorAssignment.editorSubmissionId);
