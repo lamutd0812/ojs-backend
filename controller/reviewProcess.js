@@ -777,4 +777,21 @@ exports.declineSubmission = async (req, res) => {
     }
 };
 
+exports.getCESubmission = async (req, res) => {
+    const submissionId = req.params.submissionId;
+    try {
+        const chiefEditorSubmission = await ChiefEditorSubmission.findOne({
+            submissionId: submissionId
+        }).populate('chiefEditorDecisionId', '-_id').exec();
+        res.status(StatusCodes.OK).json({
+            chiefEditorSubmission: chiefEditorSubmission
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
 

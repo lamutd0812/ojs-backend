@@ -109,4 +109,9 @@ router.put('/decline-submission/:submissionId',
     restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
     reviewProcessController.declineSubmission);
 
+// All: Get EditorSubmission
+router.get('/chief-editor-submission/:submissionId',
+    checkAuth,
+    reviewProcessController.getCESubmission);
+
 module.exports = router;
