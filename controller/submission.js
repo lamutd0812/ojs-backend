@@ -1,8 +1,9 @@
 const Submission = require('../model/submission');
 const Category = require('../model/category');
 const Stage = require('../model/stage');
+const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
-const { STAGE } = require('../config/constant');
+const { STAGE, NOTIFICATION_TYPE, USER_ROLES } = require('../config/constant');
 const logTemplates = require('../utils/log-templates');
 
 const { deleteFile } = require('../services/file-services');
@@ -101,6 +102,17 @@ exports.createNewSubmission = async (req, res) => {
                 submissionLogs: logs
             });
             const newSubmission = await submission.save();
+
+            // push noti
+            const noti = new Notification({
+                senderId: authorId,
+                type: NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
+                title: 'Bài báo mới',
+                content: 'Tác giả ' + req.user.fullname + ' đã submit bài báo lên hệ thống.',
+                link: '/dashboard/submission/' + newSubmission._id
+            });
+            await noti.save();
+
             res.status(StatusCodes.CREATED).json({ submission: newSubmission });
         } catch (err) {
             console.log(err);
@@ -187,3 +199,32 @@ exports.deleteSubmission = async (req, res) => {
         });
     }
 };
+
+exports.getMyNotifications = async (req, res) => {
+    const receiverId = req.user.userId;
+    const permission = req.user.role.permissionLevel;
+    try {
+        let notifications = null;
+        if (permission === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
+            const types = [
+                NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
+                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
+                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
+                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
+            ];
+            notifications = await Notification.find({
+                type: { $in: types }
+            })
+        } else {
+            notifications = await Notification.find({ receiverId: receiverId });
+        }
+        res.status(StatusCodes.OK).json({
+            notifications: notifications
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+}

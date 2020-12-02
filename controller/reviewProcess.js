@@ -13,9 +13,10 @@ const AuthorRevision = require('../model/author_revision');
 const ChiefEditorSubmission = require('../model/chief_editor_submission');
 const ChiefEditorDecision = require('../model/chief_editor_decision');
 const Article = require('../model/article');
+const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
-const { USER_ROLES, STAGE, SUBMISSION_STATUS, CHIEF_EDITOR_DECISION } = require('../config/constant');
+const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE } = require('../config/constant');
 const { deleteFile } = require('../services/file-services');
 
 exports.getAllEditors = async (req, res) => {
@@ -103,12 +104,21 @@ exports.assignEditor = async (req, res) => {
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);
-
             await submission.save();
-            // const savedSunmission = await submission.save();
+
+            // push noti
+            const noti = new Notification({
+                senderId: chiefEditorId,
+                receiverId: editorId,
+                type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
+                title: 'Yêu cầu thẩm định',
+                content: 'Tổng biên tập ' + req.user.fullname + ' đã chỉ định bạn chủ trì thẩm định một bài báo.',
+                link: '/dashboard/editor/assignment/' + submissionId
+            });
+            await noti.save();
+
             res.status(StatusCodes.OK).json({
                 message: 'Chỉ định biên tập viên thành công!',
-                // submission: savedSunmission
             });
         }
     } catch (err) {
@@ -166,6 +176,18 @@ exports.assignReviewer = async (req, res) => {
                 submission.submissionLogs.push(log);
             }
             await submission.save();
+
+            // push noti
+            const noti = new Notification({
+                senderId: editorId,
+                receiverId: reviewerId,
+                type: NOTIFICATION_TYPE.EDITOR_TO_REVIEWER,
+                title: 'Yêu cầu thẩm định',
+                content: 'Biên tập viên ' + req.user.fullname + ' đã chỉ định bạn thẩm định một bài báo.',
+                link: '/dashboard/reviewer/assignment/' + submissionId
+            });
+            await noti.save();
+
             res.status(StatusCodes.OK).json({
                 message: 'Chỉ định thẩm định viên thành công!'
             });
@@ -364,6 +386,17 @@ exports.createReviewerSubmission = async (req, res) => {
             submission.submissionLogs.push(log);
             await submission.save();
 
+            // push noti
+            const noti = new Notification({
+                senderId: reviewerId,
+                receiverId: reviewerAssignment.editorId,
+                type: NOTIFICATION_TYPE.REVIEWER_TO_EDITOR,
+                title: 'Kết quả thẩm định',
+                content: 'Thẩm định viên ' + req.user.fullname + ' đã nộp ý kiến thẩm định bài báo.',
+                link: '/dashboard/editor/assignment/' + submissionId
+            });
+            await noti.save();
+
             res.status(StatusCodes.CREATED).json({
                 message: 'Gửi ý kiến thẩm định thành công!'
             });
@@ -443,8 +476,8 @@ exports.createEditorSubmission = async (req, res) => {
 
         if (ceSubmission) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định cho bài báo này!' });
-        } else if (!editorAssignment.editorSubmissionId) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Không tìm thấy ý kiến thẩm định nào của bạn cho bài báo này!' });
+        } else if (editorAssignment.editorSubmissionId) {
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến thẩm định trước đó!' });
         } else {
             const editorSubmission = new EditorSubmission({
                 content: content,
@@ -463,6 +496,17 @@ exports.createEditorSubmission = async (req, res) => {
             };
             submission.submissionLogs.push(log);
             await submission.save();
+
+            // push noti
+            const noti = new Notification({
+                senderId: editorId,
+                receiverId: editorAssignment.chiefEditorId,
+                type: NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
+                title: 'Kết quả thẩm định',
+                content: 'Biên tập viên ' + req.user.fullname + ' đã nộp ý kiến thẩm định bài báo.',
+                link: '/dashboard/submission/' + submissionId
+            });
+            await noti.save();
 
             res.status(StatusCodes.CREATED).json({
                 message: 'Gửi ý kiến thẩm định thành công!'
@@ -552,6 +596,17 @@ exports.requestSubmissionRevision = async (req, res) => {
             };
             submission.submissionLogs.push(log);
             await submission.save();
+
+            // push noti
+            const noti = new Notification({
+                senderId: editorId,
+                receiverId: authorId,
+                type: NOTIFICATION_TYPE.EDITOR_TO_AUTHOR,
+                title: 'Yêu cầu chỉnh sửa',
+                content: 'Biên tập viên ' + req.user.fullname + ' đã yêu cầu bạn chỉnh sửa bài báo.',
+                link: '/dashboard/submission/' + submissionId
+            });
+            await noti.save();
 
             res.status(StatusCodes.OK).json({
                 message: 'Yêu cầu tác giả chỉnh sửa bài báo thành công!',
@@ -661,8 +716,19 @@ exports.authorSubmitRevision = async (req, res) => {
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);
-
             const updatedSubmission = await submission.save();
+
+            // push noti
+            const noti = new Notification({
+                senderId: authorId,
+                receiverId: authorAssignment.editorId,
+                type: NOTIFICATION_TYPE.AUTHOR_TO_EDITOR,
+                title: 'Yêu cầu chỉnh sửa',
+                content: 'Tác giả ' + req.user.fullname + ' đã nộp bản chỉnh sửa bài báo.',
+                link: '/dashboard/editor/assignment/' + submissionId
+            });
+            await noti.save();
+
             res.status(StatusCodes.OK).json({ submission: updatedSubmission });
         }
     } catch (err) {
@@ -690,6 +756,7 @@ exports.acceptSubmission = async (req, res) => {
 
             // create chief editor submission
             const ceDecision = await ChiefEditorDecision.findOne(CHIEF_EDITOR_DECISION.ACCEPT_SUBMISSION);
+            console.log(ceDecision);
             const ceSubmission = new ChiefEditorSubmission({
                 submissionId: submissionId,
                 chiefEditorId: chiefEditorId,
@@ -717,6 +784,17 @@ exports.acceptSubmission = async (req, res) => {
                 submissionId: submissionId
             });
             await article.save();
+
+            // push noti
+            const noti = new Notification({
+                senderId: chiefEditorId,
+                receiverId: submission.authorId,
+                type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
+                title: 'Kết quả thẩm định bài báo',
+                content: 'Bài báo #' + submission._id + ' đã được chấp nhận xuất bản.',
+                link: '/dashboard/submission/' + submissionId
+            });
+            await noti.save();
 
             res.status(StatusCodes.OK).json({
                 message: 'Bài báo đã được chấp nhận xuất bản!'
@@ -765,6 +843,17 @@ exports.declineSubmission = async (req, res) => {
             submission.submissionLogs.push(log);
             await submission.save();
 
+            // push noti
+            const noti = new Notification({
+                senderId: chiefEditorId,
+                receiverId: submission.authorId,
+                type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
+                title: 'Kết quả thẩm định bài báo',
+                content: 'Bài báo #' + submission._id + ' đã bị từ chối xuất bản.',
+                link: '/dashboard/submission/' + submissionId
+            });
+            await noti.save();
+
             res.status(StatusCodes.OK).json({
                 message: 'Từ chối bài báo thành công!'
             });
@@ -780,9 +869,13 @@ exports.declineSubmission = async (req, res) => {
 exports.getCESubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     try {
-        const chiefEditorSubmission = await ChiefEditorSubmission.findOne({
-            submissionId: submissionId
-        }).populate('chiefEditorDecisionId', '-_id').exec();
+        const chiefEditorSubmission = await ChiefEditorSubmission
+            .findOne({
+                submissionId: submissionId
+            })
+            .populate('chiefEditorDecisionId', '-_id')
+            .populate('chiefEditorId', 'firstname lastname')
+            .exec();
         res.status(StatusCodes.OK).json({
             chiefEditorSubmission: chiefEditorSubmission
         });
