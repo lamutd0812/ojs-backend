@@ -44,9 +44,4 @@ router.delete('/:submissionId',
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
     submissionController.deleteSubmission);
 
-// All: Get My Notification
-router.get('/notifications/my',
-    checkAuth,
-    submissionController.getMyNotifications);
-
 module.exports = router;

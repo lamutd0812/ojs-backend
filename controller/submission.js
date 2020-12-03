@@ -106,6 +106,7 @@ exports.createNewSubmission = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: authorId,
+                senderAvatar: req.user.avatar,
                 type: NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
                 title: 'Bài báo mới',
                 content: 'Tác giả ' + req.user.fullname + ' đã submit bài báo lên hệ thống.',
@@ -200,31 +201,3 @@ exports.deleteSubmission = async (req, res) => {
     }
 };
 
-exports.getMyNotifications = async (req, res) => {
-    const receiverId = req.user.userId;
-    const permission = req.user.role.permissionLevel;
-    try {
-        let notifications = null;
-        if (permission === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
-            const types = [
-                NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
-                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
-                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
-                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
-            ];
-            notifications = await Notification.find({
-                type: { $in: types }
-            })
-        } else {
-            notifications = await Notification.find({ receiverId: receiverId });
-        }
-        res.status(StatusCodes.OK).json({
-            notifications: notifications
-        });
-    } catch (err) {
-        console.log(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
-        });
-    }
-}

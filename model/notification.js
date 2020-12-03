@@ -6,6 +6,10 @@ const notificationSchema = new mongoose.Schema({
         required: true,
         ref: 'User'
     },
+    senderAvatar: {
+        type: String,
+        required: true
+    },
     receiverId: {
         type: mongoose.Schema.Types.ObjectId,
         required: false,

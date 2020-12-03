@@ -1,5 +1,6 @@
 const User = require('../model/user');
 const UserRole = require('../model/user_role');
+const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -93,6 +94,7 @@ exports.signin = async (req, res) => {
                 username: loadedUser.username,
                 userId: loadedUser._id.toString(),
                 fullname: loadedUser.lastname + ' ' + loadedUser.firstname,
+                avatar: loadedUser.avatar,
                 role: loadedUser.role
             },
             config.JWT_SECRET,
@@ -111,5 +113,34 @@ exports.signin = async (req, res) => {
             error: err
         });
         console.log(err);
+    }
+};
+
+exports.getMyNotifications = async (req, res) => {
+    const receiverId = req.user.userId;
+    const permission = req.user.role.permissionLevel;
+    try {
+        let notifications = null;
+        if (permission === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
+            const types = [
+                NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
+                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
+                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
+                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
+            ];
+            notifications = await Notification.find({
+                type: { $in: types }
+            })
+        } else {
+            notifications = await Notification.find({ receiverId: receiverId });
+        }
+        res.status(StatusCodes.OK).json({
+            notifications: notifications
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
     }
 };

@@ -109,6 +109,7 @@ exports.assignEditor = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: chiefEditorId,
+                senderAvatar: req.user.avatar,
                 receiverId: editorId,
                 type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
                 title: 'Yêu cầu thẩm định',
@@ -180,6 +181,7 @@ exports.assignReviewer = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: editorId,
+                senderAvatar: req.user.avatar,
                 receiverId: reviewerId,
                 type: NOTIFICATION_TYPE.EDITOR_TO_REVIEWER,
                 title: 'Yêu cầu thẩm định',
@@ -389,6 +391,7 @@ exports.createReviewerSubmission = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: reviewerId,
+                senderAvatar: req.user.avatar,
                 receiverId: reviewerAssignment.editorId,
                 type: NOTIFICATION_TYPE.REVIEWER_TO_EDITOR,
                 title: 'Kết quả thẩm định',
@@ -500,6 +503,7 @@ exports.createEditorSubmission = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: editorId,
+                senderAvatar: req.user.avatar,
                 receiverId: editorAssignment.chiefEditorId,
                 type: NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
                 title: 'Kết quả thẩm định',
@@ -600,6 +604,7 @@ exports.requestSubmissionRevision = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: editorId,
+                senderAvatar: req.user.avatar,
                 receiverId: authorId,
                 type: NOTIFICATION_TYPE.EDITOR_TO_AUTHOR,
                 title: 'Yêu cầu chỉnh sửa',
@@ -721,6 +726,7 @@ exports.authorSubmitRevision = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: authorId,
+                senderAvatar: req.user.avatar,
                 receiverId: authorAssignment.editorId,
                 type: NOTIFICATION_TYPE.AUTHOR_TO_EDITOR,
                 title: 'Yêu cầu chỉnh sửa',
@@ -788,6 +794,7 @@ exports.acceptSubmission = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: chiefEditorId,
+                senderAvatar: req.user.avatar,
                 receiverId: submission.authorId,
                 type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
                 title: 'Kết quả thẩm định bài báo',
@@ -846,6 +853,7 @@ exports.declineSubmission = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: chiefEditorId,
+                senderAvatar: req.user.avatar,
                 receiverId: submission.authorId,
                 type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
                 title: 'Kết quả thẩm định bài báo',
