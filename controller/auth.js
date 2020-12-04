@@ -128,11 +128,54 @@ exports.getMyNotifications = async (req, res) => {
                 NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
                 NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
             ];
-            notifications = await Notification.find({
-                type: { $in: types }
-            })
+            notifications = await Notification
+                .find({
+                    type: { $in: types }
+                })
+                .sort({ _id: -1 })
+                .limit(4);
         } else {
-            notifications = await Notification.find({ receiverId: receiverId });
+            notifications = await Notification
+                .find({
+                    receiverId: receiverId
+                })
+                .sort({ _id: -1 })
+                .limit(4);
+        }
+        res.status(StatusCodes.OK).json({
+            notifications: notifications
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.getAllMyNotifications = async (req, res) => {
+    const receiverId = req.user.userId;
+    const permission = req.user.role.permissionLevel;
+    try {
+        let notifications = null;
+        if (permission === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
+            const types = [
+                NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
+                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
+                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
+                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
+            ];
+            notifications = await Notification
+                .find({
+                    type: { $in: types }
+                })
+                .sort({ _id: -1 });
+        } else {
+            notifications = await Notification
+                .find({
+                    receiverId: receiverId
+                })
+                .sort({ _id: -1 });
         }
         res.status(StatusCodes.OK).json({
             notifications: notifications

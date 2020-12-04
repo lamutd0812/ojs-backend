@@ -10,9 +10,14 @@ const router = express.Router();
 router.put('/signup', authController.signup);
 router.post('/signin', authController.signin);
 
-// All: Get My Notification
+// All Roles: Get My Notification: Limit 4 
 router.get('/notifications/my',
     checkAuth,
     authController.getMyNotifications);
+
+// All Roles: Get My Notification: Limit 4 
+router.get('/notifications/my/all',
+    checkAuth,
+    authController.getAllMyNotifications);
 
 module.exports = router;
