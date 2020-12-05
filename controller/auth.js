@@ -8,6 +8,8 @@ const config = require('../config/config');
 const { USER_ROLES } = require('../config/constant');
 const avatarGenerate = require('../services/avatar-generate');
 
+const ITEMS_PER_PAGE = 2;
+
 exports.signup = async (req, res) => {
     const username = req.body.username;
     const email = req.body.email;
@@ -154,10 +156,12 @@ exports.getMyNotifications = async (req, res) => {
 };
 
 exports.getAllMyNotifications = async (req, res) => {
+    const page = +req.query.page || 1;
     const receiverId = req.user.userId;
     const permission = req.user.role.permissionLevel;
     try {
         let notifications = null;
+        let total = 0;
         if (permission === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
             const types = [
                 NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
@@ -165,20 +169,28 @@ exports.getAllMyNotifications = async (req, res) => {
                 NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
                 NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
             ];
+            total = await Notification.find({ type: { $in: types } }).countDocuments();
             notifications = await Notification
                 .find({
                     type: { $in: types }
                 })
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE)
                 .sort({ _id: -1 });
         } else {
+            total = await Notification.find({ receiverId: receiverId }).countDocuments();
             notifications = await Notification
                 .find({
                     receiverId: receiverId
                 })
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE)
                 .sort({ _id: -1 });
         }
         res.status(StatusCodes.OK).json({
-            notifications: notifications
+            notifications: notifications,
+            total: total,
+            currentPage: page
         });
     } catch (err) {
         console.log(err);
