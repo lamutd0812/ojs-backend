@@ -1,3 +1,5 @@
+const e = require("express");
+
 exports.USER_ROLES = {
     ADMIN: {
         name: 'Admin',
@@ -104,3 +106,5 @@ exports.NOTIFICATION_TYPE = {
     CHIEF_EDITOR_TO_AUTHOR: 'CHIEF_EDITOR_TO_AUTHOR', // CE notify decision to Author,
     CHIEF_EDITOR_TO_OTHERS: 'CHIEF_EDITOR_TO_OTHERS'
 }
+
+// exports.ITEMS_PER_PAGE = 4;

@@ -3,19 +3,32 @@ const Category = require('../model/category');
 const Stage = require('../model/stage');
 const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
-const { STAGE, NOTIFICATION_TYPE, USER_ROLES } = require('../config/constant');
+const { STAGE, NOTIFICATION_TYPE } = require('../config/constant');
 const logTemplates = require('../utils/log-templates');
 
 const { deleteFile } = require('../services/file-services');
 
+const ITEMS_PER_PAGE = 4;
+
 exports.getAllSubmissions = async (req, res) => {
+    const page = +req.query.page || 1;
     try {
-        const submissions = await Submission.find().sort({ _id: -1 })
+        const total = await Submission.countDocuments();
+        const submissions = await Submission
+            .find()
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ _id: -1 })
             .exec();
-        res.status(StatusCodes.OK).json({ submissions: submissions });
+
+        res.status(StatusCodes.OK).json({
+            submissions: submissions,
+            total: total,
+            currentPage: page
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -25,14 +38,23 @@ exports.getAllSubmissions = async (req, res) => {
 }
 
 exports.getSubmissionsByAuthor = async (req, res) => {
+    const page = +req.query.page || 1;
     const authorId = req.params.authorId;
     try {
-        const submissions = await Submission.find({ authorId: authorId }).sort({ _id: -1 })
+        const total = await Submission.countDocuments({ authorId: authorId });
+        const submissions = await Submission.find({ authorId: authorId })
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ _id: -1 })
             .exec();
-        res.status(StatusCodes.OK).json({ submissions: submissions });
+        res.status(StatusCodes.OK).json({
+            submissions: submissions,
+            total: total,
+            currentPage: page
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

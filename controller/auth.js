@@ -5,10 +5,10 @@ const { StatusCodes } = require('http-status-codes');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-const { USER_ROLES } = require('../config/constant');
+const { USER_ROLES, NOTIFICATION_TYPE } = require('../config/constant');
 const avatarGenerate = require('../services/avatar-generate');
 
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 6;
 
 exports.signup = async (req, res) => {
     const username = req.body.username;
@@ -126,9 +126,7 @@ exports.getMyNotifications = async (req, res) => {
         if (permission === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
             const types = [
                 NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
-                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
-                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
-                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
+                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR
             ];
             notifications = await Notification
                 .find({
@@ -165,11 +163,9 @@ exports.getAllMyNotifications = async (req, res) => {
         if (permission === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
             const types = [
                 NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
-                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_EDITOR,
-                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
-                NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR
+                NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR
             ];
-            total = await Notification.find({ type: { $in: types } }).countDocuments();
+            total = await Notification.countDocuments({ type: { $in: types } });
             notifications = await Notification
                 .find({
                     type: { $in: types }

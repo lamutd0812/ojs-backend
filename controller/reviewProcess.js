@@ -17,7 +17,10 @@ const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE } = require('../config/constant');
+
 const { deleteFile } = require('../services/file-services');
+
+const ITEMS_PER_PAGE = 4;
 
 exports.getAllEditors = async (req, res) => {
     const submissionId = req.query.submissionId;
@@ -238,8 +241,10 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
 };
 
 exports.getMyEditorAssignments = async (req, res) => {
+    const page = +req.query.page || 1;
     const editorId = req.user.userId;
     try {
+        const total = await EditorAssignment.countDocuments({ editorId: editorId });
         const editorAssignments = await EditorAssignment
             .find({ editorId: editorId })
             .populate('editorId', 'firstname lastname')
@@ -265,9 +270,14 @@ exports.getMyEditorAssignments = async (req, res) => {
                 ]
             })
             .populate('authorAssignmentId', 'authorRevisionId -_id')
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ _id: -1 })
             .exec();
         res.status(StatusCodes.OK).json({
-            editorAssignments: editorAssignments
+            editorAssignments: editorAssignments,
+            total: total,
+            currentPage: page
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -278,8 +288,10 @@ exports.getMyEditorAssignments = async (req, res) => {
 };
 
 exports.getMyReviewerAssignments = async (req, res) => {
+    const page = +req.query.page || 1;
     const reviewerId = req.user.userId;
     try {
+        const total = await ReviewerAssignment.countDocuments({ reviewerId: reviewerId });
         const reviewerAssignments = await ReviewerAssignment
             .find({ reviewerId: reviewerId })
             .populate({ path: 'reviewerId', select: 'firstname lastname' })
@@ -291,9 +303,15 @@ exports.getMyReviewerAssignments = async (req, res) => {
                     { path: 'stageId', select: 'name value -_id' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
-            }).exec();
+            })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ _id: -1 })
+            .exec();
         res.status(StatusCodes.OK).json({
-            reviewerAssignments: reviewerAssignments
+            reviewerAssignments: reviewerAssignments,
+            total: total,
+            currentPage: page
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
