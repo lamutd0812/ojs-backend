@@ -651,19 +651,21 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
     try {
         let authorAssignment = null;
         if (permissionLevel === USER_ROLES.AUTHOR.permissionLevel) {
-            authorAssignment = await AuthorAssignment.findOne({
-                submissionId: submissionId,
-                authorId: userId
-            })
+            authorAssignment = await AuthorAssignment
+                .findOne({
+                    submissionId: submissionId,
+                    authorId: userId
+                })
                 .populate('authorRevisionId')
                 .populate('editorId', 'firstname lastname')
                 .populate('authorId', 'firstname lastname')
                 .exec();
         } else {
-            authorAssignment = await AuthorAssignment.findOne({
-                submissionId: submissionId,
-                editorId: userId
-            })
+            authorAssignment = await AuthorAssignment
+                .findOne({
+                    submissionId: submissionId,
+                    editorId: userId
+                })
                 .populate('authorRevisionId')
                 .populate('editorId', 'firstname lastname')
                 .populate('authorId', 'firstname lastname')

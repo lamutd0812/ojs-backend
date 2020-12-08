@@ -35,7 +35,7 @@ exports.getAllSubmissions = async (req, res) => {
             error: err
         });
     }
-}
+};
 
 exports.getSubmissionsByAuthor = async (req, res) => {
     const page = +req.query.page || 1;
@@ -61,7 +61,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
             error: err
         });
     }
-}
+};
 
 exports.getSubmissionById = async (req, res) => {
     const submissionId = req.params.submissionId;
@@ -78,7 +78,7 @@ exports.getSubmissionById = async (req, res) => {
             error: err
         });
     }
-}
+};
 
 exports.createNewSubmission = async (req, res) => {
     let categoryId = req.body.categoryId;
