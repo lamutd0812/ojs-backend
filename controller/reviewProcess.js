@@ -496,7 +496,7 @@ exports.createEditorSubmission = async (req, res) => {
         });
 
         if (ceSubmission) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định cho bài báo này!' });
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Tổng biên tập đã đóng quá trình thẩm định cho bài báo này!' });
         } else if (editorAssignment.editorSubmissionId) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến thẩm định trước đó!' });
         } else {
@@ -557,7 +557,7 @@ exports.editEditorSubmission = async (req, res) => {
         });
 
         if (ceSubmission) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định cho bài báo này!' });
+            res.status(StatusCodes.FORBIDDEN).json({ error: 'Tổng biên tập đã đóng quá trình thẩm định cho bài báo này!' });
         } else if (!editorAssignment.editorSubmissionId) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Không tìm thấy ý kiến thẩm định nào của bạn cho bài báo này!' });
         } else {

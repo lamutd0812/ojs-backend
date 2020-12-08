@@ -45,7 +45,7 @@ exports.getArticleById = async (req, res) => {
                 select: '-stageId -submissionLogs',
                 populate: [
                     { path: 'categoryId', select: 'name -_id' },
-                    { path: 'authorId', select: 'firstname lastname' }
+                    { path: 'authorId', select: 'firstname lastname biography avatar' }
                 ]
             })
             .exec();
