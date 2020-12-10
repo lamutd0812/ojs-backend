@@ -35,13 +35,6 @@ exports.signup = async (req, res) => {
             }
         } else {
             const hashedPassword = await bcrypt.hash(password, 12);
-            // let role = null;
-            // if (toBeReviewer) {
-            //     role = await UserRole.findOne(USER_ROLES.REVIEWER);
-            // }
-            // else {
-            //     role = await UserRole.findOne(USER_ROLES.AUTHOR);
-            // }
             const role = toBeReviewer ? await UserRole.findOne(USER_ROLES.REVIEWER) : await UserRole.findOne(USER_ROLES.AUTHOR);
 
             const avatar = avatarGenerate(firstname, lastname);
@@ -77,39 +70,42 @@ exports.signin = async (req, res) => {
     const password = req.body.password;
     let loadedUser;
     try {
-        const user = await User.findOne({ username: username })
+        const user = await User
+            .findOne({ username: username })
             .populate('role');
         if (!user) {
             res.status(StatusCodes.UNAUTHORIZED).json({
                 error: 'Tài khoản hoặc mật khẩu không đúng!'
             });
+        } else {
+            loadedUser = user;
+            const isEqualPw = await bcrypt.compare(password, loadedUser.password);
+            if (!isEqualPw) {
+                res.status(StatusCodes.UNAUTHORIZED).json({
+                    error: 'Tài khoản hoặc mật khẩu không đúng!'
+                });
+            } else {
+                const token = jwt.sign(
+                    {
+                        username: loadedUser.username,
+                        userId: loadedUser._id.toString(),
+                        fullname: loadedUser.lastname + ' ' + loadedUser.firstname,
+                        avatar: loadedUser.avatar,
+                        role: loadedUser.role
+                    },
+                    config.JWT_SECRET,
+                    { expiresIn: '7d' }
+                );
+                res.status(StatusCodes.OK).json({
+                    message: 'Đăng nhập thành công!',
+                    token: token,
+                    userId: loadedUser._id.toString(),
+                    fullname: loadedUser.lastname + ' ' + loadedUser.firstname,
+                    avatar: loadedUser.avatar,
+                    role: loadedUser.role
+                });
+            }
         }
-        loadedUser = user;
-        const isEqualPw = await bcrypt.compare(password, loadedUser.password);
-        if (!isEqualPw) {
-            res.status(StatusCodes.UNAUTHORIZED).json({
-                error: 'Tài khoản hoặc mật khẩu không đúng!'
-            });
-        }
-        const token = jwt.sign(
-            {
-                username: loadedUser.username,
-                userId: loadedUser._id.toString(),
-                fullname: loadedUser.lastname + ' ' + loadedUser.firstname,
-                avatar: loadedUser.avatar,
-                role: loadedUser.role
-            },
-            config.JWT_SECRET,
-            { expiresIn: '12h' }
-        );
-        res.status(StatusCodes.OK).json({
-            message: 'Đăng nhập thành công!',
-            token: token,
-            userId: loadedUser._id.toString(),
-            fullname: loadedUser.lastname + ' ' + loadedUser.firstname,
-            avatar: loadedUser.avatar,
-            role: loadedUser.role
-        })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
