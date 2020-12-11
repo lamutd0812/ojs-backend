@@ -16,6 +16,7 @@ const decisionRoutes = require('./routes/decision');
 const submissionRoutes = require('./routes/submission');
 const reviewProcessRoutes = require('./routes/reviewProcess');
 const articleRoutes = require('./routes/article');
+const userRoutes = require('./routes/users');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/decisions', decisionRoutes);
 app.use('/submissions', submissionRoutes);
 app.use('/reviews/', reviewProcessRoutes);
 app.use('/articles', articleRoutes);
+app.use('/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 

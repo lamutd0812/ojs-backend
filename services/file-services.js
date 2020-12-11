@@ -59,7 +59,7 @@ exports.deleteFile = (fileUrl) => {
             result.error = err.stack;
         }
         else {
-            console.log('object deleted', data);
+            console.log('file deleted', data);
         }
     });
 

@@ -2,6 +2,7 @@ const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const config = require('../config/config');
+const { getFileNameFromUrl } = require('../utils/utility');
 
 aws.config.update({
     accessKeyId: config.AWS_ACCESS_KEY,
@@ -19,11 +20,13 @@ const fileFilter = (req, file, cb) => {
     ) {
         cb(null, true);
     } else {
+        const error = 'Chỉ được upload file dạng .png/.jpg/.jpeg!';
+        req.error = error;
         cb(null, false);
     }
 };
 
-const imageUpload = multer({
+exports.uploadImage = multer({
     storage: multerS3({
         s3: s3,
         bucket: config.AWS_S3_BUCKET_NAME_IMAGES,
@@ -39,4 +42,26 @@ const imageUpload = multer({
     fileFilter: fileFilter
 });
 
-module.exports = imageUpload;
+exports.deleteImage = (fileUrl) => {
+    const params = {
+        Bucket: config.AWS_S3_BUCKET_NAME_IMAGES,
+        Key: getFileNameFromUrl(fileUrl)
+    };
+
+    let result = {
+        error: null,
+        data: null
+    };
+
+    s3.deleteObject(params, (err, data) => {
+        if (err) {
+            console.log(err, err.stack);
+            result.error = err.stack;
+        }
+        else {
+            console.log('image deleted', data);
+        }
+    });
+
+    return result;
+};
