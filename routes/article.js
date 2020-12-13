@@ -9,4 +9,7 @@ router.get('/', articleController.getAllArticles);
 // Get Article by Id
 router.get('/:id', articleController.getArticleById);
 
+// Update Article downloaded times
+router.put('/update-downloaded-count/:articleId', articleController.updateDownloadedTimes);
+
 module.exports = router;

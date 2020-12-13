@@ -8,7 +8,7 @@ const config = require('../config/config');
 const { USER_ROLES, NOTIFICATION_TYPE } = require('../config/constant');
 const avatarGenerate = require('../services/avatar-generate');
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 8;
 
 exports.signup = async (req, res) => {
     const username = req.body.username;
@@ -129,14 +129,14 @@ exports.getMyNotifications = async (req, res) => {
                     type: { $in: types }
                 })
                 .sort({ _id: -1 })
-                .limit(4);
+                .limit(6);
         } else {
             notifications = await Notification
                 .find({
                     receiverId: receiverId
                 })
                 .sort({ _id: -1 })
-                .limit(4);
+                .limit(6);
         }
         res.status(StatusCodes.OK).json({
             notifications: notifications

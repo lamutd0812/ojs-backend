@@ -6,7 +6,12 @@ const articleSchema = new mongoose.Schema({
         required: true,
         default: Date.now()
     },
-    viewCount: {
+    views: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    downloaded: {
         type: Number,
         required: true,
         default: 0

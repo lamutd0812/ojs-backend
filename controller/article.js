@@ -53,6 +53,27 @@ exports.getArticleById = async (req, res) => {
         res.status(StatusCodes.OK).json({
             article: article,
         });
+        article.views = article.views + 1;
+        await article.save();
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.updateDownloadedTimes = async (req, res) => {
+    const articleId = req.params.articleId;
+    try {
+        const article = await Article.findById(articleId);
+        article.downloaded += 1;
+        const updatedArticle = await article.save();
+        res.status(StatusCodes.OK).json({
+            success: true,
+            articleId: updatedArticle._id,
+            downloaded: updatedArticle.downloaded
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
