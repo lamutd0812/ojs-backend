@@ -39,6 +39,10 @@ exports.STAGE = {
     PUBLISHED: {
         name: 'Xuất bản',
         value: 4
+    },
+    END: {
+        name: 'Kết thúc',
+        value: 0
     }
 };
 

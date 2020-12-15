@@ -862,6 +862,10 @@ exports.declineSubmission = async (req, res) => {
 
             // sendEmail to Author
 
+            // update submission stage to END
+            const endStage = await Stage.findOne(STAGE.END);
+            submission.stageId = endStage._id;
+
             // add submission log
             const log = {
                 event: logTemplates.chiefEditorDeclineSubmission(),

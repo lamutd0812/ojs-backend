@@ -8,8 +8,6 @@ const config = require('../config/config');
 const { USER_ROLES, NOTIFICATION_TYPE } = require('../config/constant');
 const avatarGenerate = require('../services/avatar-generate');
 
-const ITEMS_PER_PAGE = 8;
-
 exports.signup = async (req, res) => {
     const username = req.body.username;
     const email = req.body.email;
@@ -151,6 +149,7 @@ exports.getMyNotifications = async (req, res) => {
 
 exports.getAllMyNotifications = async (req, res) => {
     const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 6;
     const receiverId = req.user.userId;
     const permission = req.user.role.permissionLevel;
     try {

@@ -1,10 +1,9 @@
 const Article = require('../model/article');
 const { StatusCodes } = require('http-status-codes');
 
-const ITEMS_PER_PAGE = 4;
-
 exports.getAllArticles = async (req, res) => {
     const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
     try {
         const total = await Article.countDocuments();
         const articles = await Article
@@ -70,7 +69,6 @@ exports.updateDownloadedTimes = async (req, res) => {
         article.downloaded += 1;
         const updatedArticle = await article.save();
         res.status(StatusCodes.OK).json({
-            success: true,
             articleId: updatedArticle._id,
             downloaded: updatedArticle.downloaded
         });
