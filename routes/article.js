@@ -12,4 +12,10 @@ router.get('/:id', articleController.getArticleById);
 // Update Article downloaded times
 router.put('/update-downloaded-count/:articleId', articleController.updateDownloadedTimes);
 
+// Search Submisison By Keyword
+router.get('/search/submissions', articleController.getSubmissionsByKeyword);
+
+// Get Article by SubmissionId
+router.get('/submission/:submissionId', articleController.getArticleBySubmisison);
+
 module.exports = router;
