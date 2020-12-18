@@ -13,9 +13,6 @@ router.get('/:id', articleController.getArticleById);
 router.put('/update-downloaded-count/:articleId', articleController.updateDownloadedTimes);
 
 // Search Submisison By Keyword
-router.get('/search/submissions', articleController.getSubmissionsByKeyword);
-
-// Get Article by SubmissionId
-router.get('/submission/:submissionId', articleController.getArticleBySubmisison);
+router.get('/search/all', articleController.getArticlesByKeyword);
 
 module.exports = router;

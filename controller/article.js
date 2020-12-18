@@ -1,6 +1,7 @@
 const Article = require('../model/article');
 const Submission = require('../model/submission');
 const { StatusCodes } = require('http-status-codes');
+const bluebird = require('bluebird');
 
 exports.getAllArticles = async (req, res) => {
     const page = +req.query.page || 1;
@@ -81,49 +82,20 @@ exports.updateDownloadedTimes = async (req, res) => {
     }
 };
 
-exports.getSubmissionsByKeyword = async (req, res) => {
-    // const keyword = req.query.keyword;
+exports.getArticlesByKeyword = async (req, res) => {
     const regex = new RegExp(req.query["keyword"], 'i');
     try {
-        const submissions = await Submission
+        const articles = await Article
             .find({ title: regex }, { title: 1 })
             .limit(20)
             .select("title")
             .exec();
-        // const submissions = await Submission
+        // const articles = await Article
         //     .find({ $text: { $search: keyword } })
         //     .limit(20)
         //     .select("title")
         //     .exec();
-        res.status(StatusCodes.OK).json({ submissions: submissions });
-    } catch (err) {
-        console.log(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
-        });
-    }
-};
-
-exports.getArticleBySubmisison = async (req, res) => {
-    const submissionId = req.params.submissionId;
-    try {
-        const article = await Article
-            .findOne({ submissionId: submissionId })
-            .populate({
-                path: 'submissionId',
-                select: '-stageId -submissionLogs',
-                populate: [
-                    { path: 'categoryId', select: 'name -_id' },
-                    { path: 'authorId', select: 'firstname lastname biography avatar' }
-                ]
-            })
-            .exec();
-
-        res.status(StatusCodes.OK).json({
-            article: article,
-        });
-        article.views = article.views + 1;
-        await article.save();
+        res.status(StatusCodes.OK).json({ articles: articles });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const articleSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
     publishedDate: {
         type: Date,
         required: true,
