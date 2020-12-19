@@ -803,11 +803,12 @@ exports.acceptSubmission = async (req, res) => {
                 createdAt: new Date()
             };
             submission.submissionLogs.push(log);
-            await submission.save();
+            const savedSubmission = await submission.save();
 
             // publish Article;
             const article = new Article({
-                submissionId: submissionId
+                submissionId: submissionId,
+                title: savedSubmission.title
             });
             await article.save();
 
