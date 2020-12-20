@@ -20,8 +20,6 @@ const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE } = require(
 
 const { deleteFile } = require('../services/file-services');
 
-const ITEMS_PER_PAGE = 4;
-
 exports.getAllEditors = async (req, res) => {
     const submissionId = req.query.submissionId;
     try {
@@ -242,6 +240,7 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
 
 exports.getMyEditorAssignments = async (req, res) => {
     const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
     const editorId = req.user.userId;
     try {
         const total = await EditorAssignment.countDocuments({ editorId: editorId });
@@ -289,6 +288,7 @@ exports.getMyEditorAssignments = async (req, res) => {
 
 exports.getMyReviewerAssignments = async (req, res) => {
     const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
     const reviewerId = req.user.userId;
     try {
         const total = await ReviewerAssignment.countDocuments({ reviewerId: reviewerId });

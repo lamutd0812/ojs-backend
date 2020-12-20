@@ -44,4 +44,10 @@ router.delete('/:submissionId',
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
     submissionController.deleteSubmission);
 
+// Chief Editor Search Submisisons By Keyword
+router.get('/search/all',
+    checkAuth,
+    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
+    submissionController.getSubmissionsByKeyword);
+
 module.exports = router;

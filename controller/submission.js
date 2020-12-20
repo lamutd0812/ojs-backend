@@ -8,10 +8,9 @@ const logTemplates = require('../utils/log-templates');
 
 const { deleteFile } = require('../services/file-services');
 
-const ITEMS_PER_PAGE = 4;
-
 exports.getAllSubmissions = async (req, res) => {
     const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
     try {
         const total = await Submission.countDocuments();
         const submissions = await Submission
@@ -39,6 +38,7 @@ exports.getAllSubmissions = async (req, res) => {
 
 exports.getSubmissionsByAuthor = async (req, res) => {
     const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
     const authorId = req.params.authorId;
     try {
         const total = await Submission.countDocuments({ authorId: authorId });
@@ -219,6 +219,35 @@ exports.deleteSubmission = async (req, res) => {
                 message: "Submission Deleted.",
             });
         }
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.getSubmissionsByKeyword = async (req, res) => {
+    const regex = new RegExp(req.query["keyword"], 'i');
+    const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
+    try {
+        const total = await Submission.countDocuments();
+        const submissions = await Submission
+            .find({ title: regex })
+            .populate({ path: 'authorId', select: 'firstname lastname' })
+            .populate({ path: 'categoryId', select: 'name' })
+            .populate({ path: 'stageId', select: 'name value -_id' })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ _id: -1 })
+            .exec();
+
+        res.status(StatusCodes.OK).json({
+            submissions: submissions,
+            total: total,
+            currentPage: page
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

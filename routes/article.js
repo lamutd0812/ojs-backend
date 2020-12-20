@@ -10,7 +10,7 @@ router.get('/', articleController.getAllArticles);
 router.get('/most-viewed', articleController.getMostViewedArticles);
 
 // Get Most Downloaded Articles
-router.get('/most-viewed', articleController.getMostDownloadedArticles);
+router.get('/most-downloaded', articleController.getMostDownloadedArticles);
 
 // Get Article by Id
 router.get('/:articleId', articleController.getArticleById);
