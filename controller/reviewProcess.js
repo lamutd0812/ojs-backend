@@ -808,7 +808,8 @@ exports.acceptSubmission = async (req, res) => {
             // publish Article;
             const article = new Article({
                 submissionId: submissionId,
-                title: savedSubmission.title
+                title: savedSubmission.title,
+                categoryId: savedSubmission.categoryId
             });
             await article.save();
 

@@ -12,12 +12,12 @@ exports.getAllArticles = async (req, res) => {
             .find()
             .populate({
                 path: 'submissionId',
-                select: '-stageId -submissionLogs',
+                select: '-stageId -submissionLogs -categoryId',
                 populate: [
-                    { path: 'categoryId', select: 'name -_id' },
-                    { path: 'authorId', select: 'firstname lastname' }
+                    { path: 'authorId', select: 'firstname lastname biography avatar' }
                 ]
             })
+            .populate('categoryId', 'name -_id')
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
@@ -36,19 +36,85 @@ exports.getAllArticles = async (req, res) => {
     }
 };
 
-exports.getArticleById = async (req, res) => {
-    const id = req.params.id;
+exports.getMostViewedArticles = async (req, res) => {
+    const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
     try {
-        const article = await Article
-            .findById(id)
+        const total = await Article.countDocuments();
+        const articles = await Article
+            .find()
             .populate({
                 path: 'submissionId',
-                select: '-stageId -submissionLogs',
+                select: '-stageId -submissionLogs -categoryId',
                 populate: [
-                    { path: 'categoryId', select: 'name -_id' },
                     { path: 'authorId', select: 'firstname lastname biography avatar' }
                 ]
             })
+            .populate('categoryId', 'name -_id')
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ views: -1 })
+            .exec();
+
+        res.status(StatusCodes.OK).json({
+            articles: articles,
+            total: total,
+            currentPage: page
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.getMostDownloadedArticles = async (req, res) => {
+    const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
+    try {
+        const total = await Article.countDocuments();
+        const articles = await Article
+            .find()
+            .populate({
+                path: 'submissionId',
+                select: '-stageId -submissionLogs -categoryId',
+                populate: [
+                    { path: 'authorId', select: 'firstname lastname biography avatar' }
+                ]
+            })
+            .populate('categoryId', 'name -_id')
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ downloaded: -1 })
+            .exec();
+
+        res.status(StatusCodes.OK).json({
+            articles: articles,
+            total: total,
+            currentPage: page
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.getArticleById = async (req, res) => {
+    const articleId = req.params.articleId;
+    try {
+        const article = await Article
+            .findById(articleId)
+            .populate({
+                path: 'submissionId',
+                select: '-stageId -submissionLogs -categoryId',
+                populate: [
+                    { path: 'authorId', select: 'firstname lastname biography avatar' }
+                ]
+            })
+            .populate('categoryId', 'name -_id')
             .exec();
 
         res.status(StatusCodes.OK).json({
@@ -56,6 +122,45 @@ exports.getArticleById = async (req, res) => {
         });
         article.views = article.views + 1;
         await article.save();
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
+exports.getRelatedArticles = async (req, res) => {
+    const articleId = req.params.articleId;
+    const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
+    try {
+        const article = await Article.findById(articleId);
+        const cond = {
+            _id: { $ne: article._id },
+            categoryId: article.categoryId
+        };
+        const total = await Article.countDocuments(cond);
+        const relatedArticles = await Article
+            .find(cond)
+            .populate({
+                path: 'submissionId',
+                select: '-stageId -submissionLogs -categoryId',
+                populate: [
+                    { path: 'authorId', select: 'firstname lastname' }
+                ]
+            })
+            .populate('categoryId', 'name -_id')
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .sort({ downloaded: -1 })
+            .exec();
+
+        res.status(StatusCodes.OK).json({
+            relatedArticles: relatedArticles,
+            total: total,
+            currentPage: page
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

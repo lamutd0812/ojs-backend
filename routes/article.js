@@ -6,8 +6,17 @@ const router = express.Router();
 // Get All Articles
 router.get('/', articleController.getAllArticles);
 
+// Get Most Viewed Articles
+router.get('/most-viewed', articleController.getMostViewedArticles);
+
+// Get Most Downloaded Articles
+router.get('/most-viewed', articleController.getMostDownloadedArticles);
+
 // Get Article by Id
-router.get('/:id', articleController.getArticleById);
+router.get('/:articleId', articleController.getArticleById);
+
+// Get Related Article by articleId
+router.get('/realated/:articleId', articleController.getRelatedArticles);
 
 // Update Article downloaded times
 router.put('/update-downloaded-count/:articleId', articleController.updateDownloadedTimes);
