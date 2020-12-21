@@ -232,7 +232,7 @@ exports.getSubmissionsByKeyword = async (req, res) => {
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;
     try {
-        const total = await Submission.countDocuments();
+        const total = await Submission.countDocuments({ title: regex });
         const submissions = await Submission
             .find({ title: regex })
             .populate({ path: 'authorId', select: 'firstname lastname' })
