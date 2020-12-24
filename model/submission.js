@@ -47,6 +47,11 @@ const submissionSchema = new mongoose.Schema({
         required: true,
         ref: 'Stage'
     },
+    contributors: [{
+        fullname: String,
+        affiliation: String
+    }],
+    metadata: [String],
 }, {
     timestamps: true
 });

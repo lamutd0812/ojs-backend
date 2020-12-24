@@ -86,6 +86,10 @@ exports.createNewSubmission = async (req, res) => {
     const abstract = req.body.abstract;
     let attachmentFile = '';
     let attachmentUrl = '';
+    // metadata
+    const contributors = JSON.parse(req.body.contributors);
+    let metadata = [];
+
     const authorId = req.user.userId;
 
     if (categoryId === "") {
@@ -109,10 +113,16 @@ exports.createNewSubmission = async (req, res) => {
             };
             logs.push(log);
 
-            if (req.file) {
-                attachmentFile = req.file.originalname;
-                attachmentUrl = req.file.location;
+            if (req.files.attachment[0]) {
+                attachmentFile = req.files.attachment[0].originalname;
+                attachmentUrl = req.files.attachment[0].location;
             }
+            if (req.files.metadata) {
+                req.files.metadata.forEach(file => {
+                    metadata.push(file.location);
+                })
+            }
+
             const submission = new Submission({
                 categoryId: categoryId,
                 title: title,
@@ -121,7 +131,9 @@ exports.createNewSubmission = async (req, res) => {
                 attachmentUrl: attachmentUrl,
                 authorId: authorId,
                 stageId: submissionStage._id,
-                submissionLogs: logs
+                submissionLogs: logs,
+                contributors: contributors.data,
+                metadata: metadata
             });
             const newSubmission = await submission.save();
 
@@ -151,6 +163,11 @@ exports.updateSubmission = async (req, res) => {
     let categoryId = req.body.categoryId;
     const title = req.body.title;
     const abstract = req.body.abstract;
+    // metadata
+    const contributors = JSON.parse(req.body.contributors);
+    let metadata = [];
+
+    const authorId = req.user.userId;
 
     try {
         const submission = await Submission.findById(submissionId);
@@ -166,18 +183,21 @@ exports.updateSubmission = async (req, res) => {
             submission.categoryId = categoryId;
             submission.title = title;
             submission.abstract = abstract;
-            if (req.file) {
+            submission.contributors = contributors.data;
+            if (req.files.attachment[0]) {
                 // delete current attachmentUrl
-                const result = deleteFile(submission.attachmentUrl);
-                if (result.error) {
-                    res.status(StatusCodes.NOT_FOUND).json({
-                        message: "Delete Attachment Failed.",
-                        error: result.error
-                    });
-                } else {
-                    submission.attachmentFile = req.file.originalname;
-                    submission.attachmentUrl = req.file.location;
-                }
+                deleteFile(submission.attachmentUrl);
+                submission.attachmentFile = req.file.originalname;
+                submission.attachmentUrl = req.file.location;
+                // if (result.error) {
+                //     res.status(StatusCodes.NOT_FOUND).json({
+                //         message: "Delete Attachment Failed.",
+                //         error: result.error
+                //     });
+                // } else {
+                //     submission.attachmentFile = req.file.originalname;
+                //     submission.attachmentUrl = req.file.location;
+                // }
             }
 
             // update logs

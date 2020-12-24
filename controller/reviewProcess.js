@@ -473,7 +473,7 @@ exports.editReviewerSubmission = async (req, res) => {
             } else {
                 if (req.file) {
                     // delete current attachmentUrl
-                    const result = deleteFile(reviewerSubmission.attachmentUrl);
+                    deleteFile(reviewerSubmission.attachmentUrl);
                     reviewerSubmission.attachmentFile = req.file.originalname;
                     reviewerSubmission.attachmentUrl = req.file.location;
                 }
@@ -601,7 +601,7 @@ exports.editEditorSubmission = async (req, res) => {
             } else {
                 if (req.file) {
                     // delete current attachmentUrl
-                    const result = deleteFile(editorSubmission.attachmentUrl);
+                    deleteFile(editorSubmission.attachmentUrl);
                     editorSubmission.attachmentFile = req.file.originalname;
                     editorSubmission.attachmentUrl = req.file.location;
                 }
@@ -757,16 +757,9 @@ exports.authorSubmitRevision = async (req, res) => {
             submission.abstract = abstract;
             if (req.file) {
                 // delete current attachmentUrl
-                const result = deleteFile(submission.attachmentUrl);
-                if (result.error) {
-                    res.status(StatusCodes.NOT_FOUND).json({
-                        message: "Delete Attachment Failed.",
-                        error: result.error
-                    });
-                } else {
-                    submission.attachmentFile = req.file.originalname;
-                    submission.attachmentUrl = req.file.location;
-                }
+                deleteFile(submission.attachmentUrl);
+                submission.attachmentFile = req.file.originalname;
+                submission.attachmentUrl = req.file.location;
             }
 
             // create author revision

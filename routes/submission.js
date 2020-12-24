@@ -28,14 +28,20 @@ router.get('/author/:authorId',
 router.post('/',
     checkAuth,
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
-    uploadFile.single('attachment'),
+    uploadFile.fields([
+        { name: 'attachment', maxCount: 1 },
+        { name: 'metadata', maxCount: 3 },
+    ]),
     submissionController.createNewSubmission);
 
 // Author
 router.put('/:submissionId',
     checkAuth,
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
-    uploadFile.single('attachment'),
+    uploadFile.fields([
+        { name: 'attachment', maxCount: 1 },
+        { name: 'metadata', maxCount: 3 },
+    ]),
     submissionController.updateSubmission);
 
 // Author
