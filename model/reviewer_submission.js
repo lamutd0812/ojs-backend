@@ -5,7 +5,10 @@ const reviewerSubmissionSchema = new mongoose.Schema({
         type: String
     },
     attachmentFile: {
-        type: String
+        type: String,
+    },
+    attachmentUrl: {
+        type: String,
     },
     reviewerDecisionId: {
         type: mongoose.Schema.Types.ObjectId,

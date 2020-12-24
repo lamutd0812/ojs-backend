@@ -5,7 +5,10 @@ const editorSubmissionSchema = new mongoose.Schema({
         type: String
     },
     attachmentFile: {
-        type: String
+        type: String,
+    },
+    attachmentUrl: {
+        type: String,
     },
     editorDecisionId: {
         type: mongoose.Schema.Types.ObjectId,

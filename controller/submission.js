@@ -178,10 +178,6 @@ exports.updateSubmission = async (req, res) => {
                     submission.attachmentFile = req.file.originalname;
                     submission.attachmentUrl = req.file.location;
                 }
-            } else {
-                res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                    error: "Không có file nào được tải lên"
-                });
             }
 
             // update logs

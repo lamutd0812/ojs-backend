@@ -57,24 +57,28 @@ router.get('/reviewer-assignments/my/:submissionId',
 router.post('/reviewer-submission/:submissionId',
     checkAuth,
     restrict([USER_ROLES.REVIEWER.permissionLevel]),
+    uploadFile.single('attachment'),
     reviewProcessController.createReviewerSubmission);
 
 // Reviewer: edit review submission
 router.put('/reviewer-submission/:submissionId',
     checkAuth,
     restrict([USER_ROLES.REVIEWER.permissionLevel]),
+    uploadFile.single('attachment'),
     reviewProcessController.editReviewerSubmission);
 
 // Editor: submit review for a submission
 router.post('/editor-submission/:submissionId',
     checkAuth,
     restrict([USER_ROLES.EDITOR.permissionLevel]),
+    uploadFile.single('attachment'),
     reviewProcessController.createEditorSubmission);
 
 // Editor: edit review for a submission
 router.put('/editor-submission/:submissionId',
     checkAuth,
     restrict([USER_ROLES.EDITOR.permissionLevel]),
+    uploadFile.single('attachment'),
     reviewProcessController.editEditorSubmission);
 
 // Editor: Request Author to Revise Submission (Create Author Assignment)

@@ -361,72 +361,85 @@ exports.createReviewerSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     let reviewerDecisionId = req.body.reviewerDecisionId;
     const content = req.body.content;
+    let attachmentFile = '';
+    let attachmentUrl = '';
     const reviewerId = req.user.userId; // nguoi tao
 
     if (reviewerDecisionId === "") {
         const decision = await ReviewerDecision.find().limit(1);
         reviewerDecisionId = decision[0]._id;
     }
-
-    try {
-        const reviewerAssignment = await ReviewerAssignment.findOne({
-            submissionId: submissionId,
-            reviewerId: reviewerId
-        });
-        const editorAssignment = await EditorAssignment.findOne({
-            submissionId: submissionId,
-            reviewerAssignmentId: reviewerAssignment._id
-        });
-        const authorAssignment = await AuthorAssignment.exists({
-            submissionId: submissionId,
-            editorId: reviewerAssignment.editorId
-        });
-
-        if (reviewerAssignment.reviewerSubmissionId) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến trước đó!' });
-        } else if (editorAssignment.editorSubmissionId || authorAssignment) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định!' });
-        } else {
-            const reviewerSubmission = new ReviewerSubmission({
-                content: content,
-                reviewerDecisionId: reviewerDecisionId
-            });
-            const rs = await reviewerSubmission.save();
-
-            reviewerAssignment.reviewerSubmissionId = rs._id;
-            await reviewerAssignment.save();
-
-            // add submission log
-            const submission = await Submission.findById(submissionId);
-            const reviewer = await User.findById(reviewerId).select('firstname lastname');
-            const log = {
-                event: logTemplates.reviewerCreateReview(reviewer.lastname + ' ' + reviewer.firstname),
-                createdAt: new Date()
-            };
-            submission.submissionLogs.push(log);
-            await submission.save();
-
-            // push noti
-            const noti = new Notification({
-                senderId: reviewerId,
-                senderAvatar: req.user.avatar,
-                receiverId: reviewerAssignment.editorId,
-                type: NOTIFICATION_TYPE.REVIEWER_TO_EDITOR,
-                title: 'Kết quả thẩm định',
-                content: 'Thẩm định viên ' + req.user.fullname + ' đã nộp ý kiến thẩm định bài báo.',
-                link: '/dashboard/editor/assignment/' + submissionId
-            });
-            await noti.save();
-
-            res.status(StatusCodes.CREATED).json({
-                message: 'Gửi ý kiến thẩm định thành công!'
-            });
-        }
-    } catch (err) {
+    if (req.error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: req.error
         });
-        console.log(err);
+    } else {
+        try {
+            const reviewerAssignment = await ReviewerAssignment.findOne({
+                submissionId: submissionId,
+                reviewerId: reviewerId
+            });
+            const editorAssignment = await EditorAssignment.findOne({
+                submissionId: submissionId,
+                reviewerAssignmentId: reviewerAssignment._id
+            });
+            const authorAssignment = await AuthorAssignment.exists({
+                submissionId: submissionId,
+                editorId: reviewerAssignment.editorId
+            });
+
+            if (reviewerAssignment.reviewerSubmissionId) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến trước đó!' });
+            } else if (editorAssignment.editorSubmissionId || authorAssignment) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã đóng quá trình thẩm định!' });
+            } else {
+                if (req.file) {
+                    attachmentFile = req.file.originalname;
+                    attachmentUrl = req.file.location;
+                }
+                const reviewerSubmission = new ReviewerSubmission({
+                    content: content,
+                    reviewerDecisionId: reviewerDecisionId,
+                    attachmentFile: attachmentFile,
+                    attachmentUrl: attachmentUrl,
+                });
+                const rs = await reviewerSubmission.save();
+
+                reviewerAssignment.reviewerSubmissionId = rs._id;
+                await reviewerAssignment.save();
+
+                // add submission log
+                const submission = await Submission.findById(submissionId);
+                const reviewer = await User.findById(reviewerId).select('firstname lastname');
+                const log = {
+                    event: logTemplates.reviewerCreateReview(reviewer.lastname + ' ' + reviewer.firstname),
+                    createdAt: new Date()
+                };
+                submission.submissionLogs.push(log);
+                await submission.save();
+
+                // push noti
+                const noti = new Notification({
+                    senderId: reviewerId,
+                    senderAvatar: req.user.avatar,
+                    receiverId: reviewerAssignment.editorId,
+                    type: NOTIFICATION_TYPE.REVIEWER_TO_EDITOR,
+                    title: 'Kết quả thẩm định',
+                    content: 'Thẩm định viên ' + req.user.fullname + ' đã nộp ý kiến thẩm định bài báo.',
+                    link: '/dashboard/editor/assignment/' + submissionId
+                });
+                await noti.save();
+
+                res.status(StatusCodes.CREATED).json({
+                    message: 'Gửi ý kiến thẩm định thành công!'
+                });
+            }
+        } catch (err) {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                error: err
+            });
+            console.log(err);
+        }
     }
 };
 
@@ -458,6 +471,12 @@ exports.editReviewerSubmission = async (req, res) => {
             if (reviewerSubmission.isAccepted) {
                 res.status(StatusCodes.FORBIDDEN).json({ error: 'Biên tập viên đã tiếp nhận ý kiến thẩm định của bạn trước đó!' });
             } else {
+                if (req.file) {
+                    // delete current attachmentUrl
+                    const result = deleteFile(reviewerSubmission.attachmentUrl);
+                    reviewerSubmission.attachmentFile = req.file.originalname;
+                    reviewerSubmission.attachmentUrl = req.file.location;
+                }
                 reviewerSubmission.content = content;
                 reviewerSubmission.reviewerDecisionId = reviewerDecisionId;
                 await reviewerSubmission.save();
@@ -479,6 +498,8 @@ exports.createEditorSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     let editorDecisionId = req.body.editorDecisionId;
     const content = req.body.content;
+    let attachmentFile = '';
+    let attachmentUrl = '';
     const editorId = req.user.userId; // nguoi tao
 
     if (editorDecisionId === "") {
@@ -486,59 +507,72 @@ exports.createEditorSubmission = async (req, res) => {
         editorDecisionId = decision[0]._id;
     }
 
-    try {
-        const ceSubmission = await ChiefEditorSubmission.exists({
-            submissionId: submissionId
-        });
-        const editorAssignment = await EditorAssignment.findOne({
-            submissionId: submissionId,
-            editorId: editorId
-        });
-
-        if (ceSubmission) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Tổng biên tập đã đóng quá trình thẩm định cho bài báo này!' });
-        } else if (editorAssignment.editorSubmissionId) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến thẩm định trước đó!' });
-        } else {
-            const editorSubmission = new EditorSubmission({
-                content: content,
-                editorDecisionId: editorDecisionId
-            });
-            const rs = await editorSubmission.save();
-
-            editorAssignment.editorSubmissionId = rs._id;
-            await editorAssignment.save();
-
-            // add submission log
-            const submission = await Submission.findById(submissionId);
-            const log = {
-                event: logTemplates.editorSubmitReview(),
-                createdAt: new Date()
-            };
-            submission.submissionLogs.push(log);
-            await submission.save();
-
-            // push noti
-            const noti = new Notification({
-                senderId: editorId,
-                senderAvatar: req.user.avatar,
-                receiverId: editorAssignment.chiefEditorId,
-                type: NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
-                title: 'Kết quả thẩm định',
-                content: 'Biên tập viên ' + req.user.fullname + ' đã nộp ý kiến thẩm định bài báo.',
-                link: '/dashboard/submission/' + submissionId
-            });
-            await noti.save();
-
-            res.status(StatusCodes.CREATED).json({
-                message: 'Gửi ý kiến thẩm định thành công!'
-            });
-        }
-    } catch (err) {
+    if (req.error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: req.error
         });
-        console.log(err);
+    } else {
+        try {
+            const ceSubmission = await ChiefEditorSubmission.exists({
+                submissionId: submissionId
+            });
+            const editorAssignment = await EditorAssignment.findOne({
+                submissionId: submissionId,
+                editorId: editorId
+            });
+
+            if (ceSubmission) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Tổng biên tập đã đóng quá trình thẩm định cho bài báo này!' });
+            } else if (editorAssignment.editorSubmissionId) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã nộp ý kiến thẩm định trước đó!' });
+            } else {
+                if (req.file) {
+                    attachmentFile = req.file.originalname;
+                    attachmentUrl = req.file.location;
+                }
+                const editorSubmission = new EditorSubmission({
+                    content: content,
+                    editorDecisionId: editorDecisionId,
+                    attachmentFile: attachmentFile,
+                    attachmentUrl: attachmentUrl,
+                });
+                const rs = await editorSubmission.save();
+
+                editorAssignment.editorSubmissionId = rs._id;
+                await editorAssignment.save();
+
+                // add submission log
+                const submission = await Submission.findById(submissionId);
+                const log = {
+                    event: logTemplates.editorSubmitReview(),
+                    createdAt: new Date()
+                };
+
+                submission.submissionLogs.push(log);
+                await submission.save();
+
+                // push noti
+                const noti = new Notification({
+                    senderId: editorId,
+                    senderAvatar: req.user.avatar,
+                    receiverId: editorAssignment.chiefEditorId,
+                    type: NOTIFICATION_TYPE.EDITOR_TO_CHIEF_EDITOR,
+                    title: 'Kết quả thẩm định',
+                    content: 'Biên tập viên ' + req.user.fullname + ' đã nộp ý kiến thẩm định bài báo.',
+                    link: '/dashboard/submission/' + submissionId
+                });
+                await noti.save();
+
+                res.status(StatusCodes.CREATED).json({
+                    message: 'Gửi ý kiến thẩm định thành công!'
+                });
+            }
+        } catch (err) {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                error: err
+            });
+            console.log(err);
+        }
     }
 };
 
@@ -565,6 +599,12 @@ exports.editEditorSubmission = async (req, res) => {
             if (editorSubmission.isAccepted) {
                 res.status(StatusCodes.FORBIDDEN).json({ error: 'Tổng biên tập viên đã tiếp nhận ý kiến thẩm định của bạn trước đó!' });
             } else {
+                if (req.file) {
+                    // delete current attachmentUrl
+                    const result = deleteFile(editorSubmission.attachmentUrl);
+                    editorSubmission.attachmentFile = req.file.originalname;
+                    editorSubmission.attachmentUrl = req.file.location;
+                }
                 editorSubmission.content = content;
                 editorSubmission.editorDecisionId = editorDecisionId;
                 await editorSubmission.save();
