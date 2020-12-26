@@ -80,6 +80,74 @@ exports.getSubmissionById = async (req, res) => {
     }
 };
 
+// exports.createNewSubmission = async (req, res) => {
+//     let categoryId = req.body.categoryId;
+//     const title = req.body.title;
+//     const abstract = req.body.abstract;
+//     let attachmentFile = '';
+//     let attachmentUrl = '';
+
+//     const authorId = req.user.userId;
+
+//     if (categoryId === "") {
+//         const category = await Category.find().limit(1);
+//         categoryId = category[0]._id;
+//     }
+
+//     if (req.error) {
+//         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//             error: req.error
+//         });
+//     } else {
+//         try {
+//             const submissionStage = await Stage.findOne({ value: STAGE.SUBMISSION.value });
+
+//             // create logs
+//             let logs = [];
+//             const log = {
+//                 event: logTemplates.authorSubmitArticle(req.user.fullname),
+//                 createdAt: new Date()
+//             };
+//             logs.push(log);
+
+//             if (req.files.attachment[0]) {
+//                 attachmentFile = req.files.attachment[0].originalname;
+//                 attachmentUrl = req.files.attachment[0].location;
+//             }
+
+//             const submission = new Submission({
+//                 categoryId: categoryId,
+//                 title: title,
+//                 abstract: abstract,
+//                 attachmentFile: attachmentFile,
+//                 attachmentUrl: attachmentUrl,
+//                 authorId: authorId,
+//                 stageId: submissionStage._id,
+//                 submissionLogs: logs,
+//             });
+//             const newSubmission = await submission.save();
+
+//             // push noti
+//             const noti = new Notification({
+//                 senderId: authorId,
+//                 senderAvatar: req.user.avatar,
+//                 type: NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
+//                 title: 'Bài báo mới',
+//                 content: 'Tác giả ' + req.user.fullname + ' đã submit bài báo lên hệ thống.',
+//                 link: '/dashboard/submission/' + newSubmission._id
+//             });
+//             await noti.save();
+
+//             res.status(StatusCodes.CREATED).json({ submission: newSubmission });
+//         } catch (err) {
+//             console.log(err);
+//             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//                 error: err
+//             });
+//         }
+//     }
+// };
+
 exports.createNewSubmission = async (req, res) => {
     let categoryId = req.body.categoryId;
     const title = req.body.title;
@@ -113,13 +181,16 @@ exports.createNewSubmission = async (req, res) => {
             };
             logs.push(log);
 
-            if (req.files.attachment[0]) {
+            if (req.files.attachment) {
                 attachmentFile = req.files.attachment[0].originalname;
                 attachmentUrl = req.files.attachment[0].location;
             }
             if (req.files.metadata) {
                 req.files.metadata.forEach(file => {
-                    metadata.push(file.location);
+                    metadata.push({
+                        url: file.location,
+                        filename: file.originalname
+                    });
                 })
             }
 

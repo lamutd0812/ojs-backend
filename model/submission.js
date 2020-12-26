@@ -51,7 +51,10 @@ const submissionSchema = new mongoose.Schema({
         fullname: String,
         affiliation: String
     }],
-    metadata: [String],
+    metadata: [{
+        url: String,
+        filename: String
+    }],
 }, {
     timestamps: true
 });
