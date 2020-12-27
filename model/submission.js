@@ -48,10 +48,12 @@ const submissionSchema = new mongoose.Schema({
         ref: 'Stage'
     },
     contributors: [{
+        _id: false,
         fullname: String,
         affiliation: String
     }],
     metadata: [{
+        _id: false,
         url: String,
         filename: String
     }],

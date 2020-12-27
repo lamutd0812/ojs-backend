@@ -98,7 +98,10 @@ router.get('/author-assignment/:submissionId',
 router.put('/author-assignment/:submissionId',
     checkAuth,
     restrict([USER_ROLES.AUTHOR.permissionLevel]),
-    uploadFile.single('attachment'),
+    uploadFile.fields([
+        { name: 'attachment', maxCount: 1 },
+        { name: 'metadata', maxCount: 10 },
+    ]),
     reviewProcessController.authorSubmitRevision);
 
 // Chief Editor Accept Submission

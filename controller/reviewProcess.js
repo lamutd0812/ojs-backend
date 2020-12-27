@@ -729,6 +729,9 @@ exports.authorSubmitRevision = async (req, res) => {
     let categoryId = req.body.categoryId;
     const title = req.body.title;
     const abstract = req.body.abstract;
+    // metadata
+    const contributors = JSON.parse(req.body.contributors);
+    let metadata = [];
 
     try {
         const submission = await Submission.findOne({
@@ -755,11 +758,23 @@ exports.authorSubmitRevision = async (req, res) => {
             submission.categoryId = categoryId;
             submission.title = title;
             submission.abstract = abstract;
-            if (req.file) {
-                // delete current attachmentUrl
+            
+            if (req.files.attachment[0]) {
                 deleteFile(submission.attachmentUrl);
-                submission.attachmentFile = req.file.originalname;
-                submission.attachmentUrl = req.file.location;
+                submission.attachmentFile = req.files.attachment[0].originalname;
+                submission.attachmentUrl = req.files.attachment[0].location;
+            }
+            if (req.files.metadata) {
+                submission.metadata.forEach(file => {
+                    deleteFile(file.url);
+                });
+                req.files.metadata.forEach(file => {
+                    metadata.push({
+                        url: file.location,
+                        filename: file.originalname
+                    });
+                });
+                submission.metadata = metadata;
             }
 
             // create author revision
