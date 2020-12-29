@@ -687,30 +687,22 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     const userId = req.user.userId;
     const permissionLevel = req.user.role.permissionLevel;
-
     try {
-        let authorAssignment = null;
+        let cond = {};
         if (permissionLevel === USER_ROLES.AUTHOR.permissionLevel) {
-            authorAssignment = await AuthorAssignment
-                .findOne({
-                    submissionId: submissionId,
-                    authorId: userId
-                })
-                .populate('authorRevisionId')
-                .populate('editorId', 'firstname lastname')
-                .populate('authorId', 'firstname lastname')
-                .exec();
+            cond = { submissionId: submissionId, authorId: userId }
+        } else if (permissionLevel === USER_ROLES.EDITOR.permissionLevel) {
+            cond = { submissionId: submissionId, editorId: userId }
         } else {
-            authorAssignment = await AuthorAssignment
-                .findOne({
-                    submissionId: submissionId,
-                    editorId: userId
-                })
-                .populate('authorRevisionId')
-                .populate('editorId', 'firstname lastname')
-                .populate('authorId', 'firstname lastname')
-                .exec();;
+            cond = { submissionId: submissionId }
         }
+
+        const authorAssignment = await AuthorAssignment
+            .findOne(cond)
+            .populate('authorRevisionId')
+            .populate('editorId', 'firstname lastname')
+            .populate('authorId', 'firstname lastname')
+            .exec();
 
         res.status(StatusCodes.OK).json({
             authorAssignment: authorAssignment
@@ -758,7 +750,7 @@ exports.authorSubmitRevision = async (req, res) => {
             submission.categoryId = categoryId;
             submission.title = title;
             submission.abstract = abstract;
-            
+
             if (req.files.attachment[0]) {
                 deleteFile(submission.attachmentUrl);
                 submission.attachmentFile = req.files.attachment[0].originalname;
