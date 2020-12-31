@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true 
+        required: true
     },
     firstname: {
         type: String,
@@ -38,7 +38,11 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'UserRole'
-    }
+    },
+    preferenceCategoryId: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category'
+    }],
 }, {
     timestamps: true
 });

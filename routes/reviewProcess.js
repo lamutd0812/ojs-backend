@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/editors',
     checkAuth,
     restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
-    reviewProcessController.getAllEditors);
+    reviewProcessController.getEditors);
 
 // Chief Editor assign Editor
 router.put('/assign-editor',
@@ -33,7 +33,7 @@ router.get('/editor-assignments/my/all',
 router.get('/reviewers',
     checkAuth,
     restrict([USER_ROLES.EDITOR.permissionLevel]),
-    reviewProcessController.getAllReviewers);
+    reviewProcessController.getReviewers);
 
 // Editor assign Reviewer
 router.put('/assign-reviewer',

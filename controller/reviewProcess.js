@@ -17,15 +17,18 @@ const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE, EDITOR_DECISION } = require('../config/constant');
+const bluebird = require('bluebird');
 
 const { deleteFile } = require('../services/file-services');
 
-exports.getAllEditors = async (req, res) => {
+exports.getEditors = async (req, res) => {
     const submissionId = req.query.submissionId;
     try {
         let ids = [];
         // Not assign Editor if Editor is Submission's Author
-        const submission = await Submission.findById(submissionId).select('authorId');
+        const submission = await Submission
+            .findById(submissionId)
+            .select('authorId');
         ids.push(submission.authorId);
 
         const editorRole = await UserRole.findOne(USER_ROLES.EDITOR);
@@ -33,7 +36,28 @@ exports.getAllEditors = async (req, res) => {
             role: editorRole._id,
             _id: { $nin: ids }
         });
-        res.status(StatusCodes.OK).json({ editors: editors });
+
+        const listEditors = await bluebird.Promise.map(editors, async editor => {
+            const daXuLy = await EditorAssignment.find({
+                editorId: editor._id,
+                editorSubmissionId: { $ne: null }
+            });
+            const dangXuLy = await EditorAssignment.find({
+                editorId: editor._id,
+                editorSubmissionId: null
+            });
+
+            const res = {
+                _id: editor._id,
+                firstname: editor.firstname,
+                lastname: editor.lastname,
+                handled: daXuLy.length,
+                handling: dangXuLy.length
+            }
+            return res;
+        }, { concurrency: 50 });
+
+        res.status(StatusCodes.OK).json({ editors: listEditors });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
@@ -42,7 +66,7 @@ exports.getAllEditors = async (req, res) => {
     }
 }
 
-exports.getAllReviewers = async (req, res) => {
+exports.getReviewers = async (req, res) => {
     const submissionId = req.query.submissionId;
     try {
         // Only get Reviewers that not assigned for this submission yet.
@@ -52,18 +76,50 @@ exports.getAllReviewers = async (req, res) => {
 
         let ids = [];
         // Not Assign Reviewer if Reviewer is Submission's Author
-        const submission = await Submission.findById(submissionId).select('authorId');
+        const submission = await Submission
+            .findById(submissionId)
+            .select('authorId categoryId');
+        // .populate('categoryId', 'name');
         ids.push(submission.authorId);
         reviewerAssignments.map(assignment => {
             return ids.push(assignment.reviewerId);
         });
 
         const reviewerRole = await UserRole.findOne(USER_ROLES.REVIEWER);
-        const reviewers = await User.find({
-            role: reviewerRole._id,
-            _id: { $nin: ids }
-        });
-        res.status(StatusCodes.OK).json({ reviewers: reviewers });
+        const reviewers = await User
+            .find({
+                role: reviewerRole._id,
+                _id: { $nin: ids },
+                preferenceCategoryId: submission.categoryId
+            })
+            .populate('preferenceCategoryId', 'name');
+
+        const listReviewers = await bluebird.Promise.map(reviewers, async reviewer => {
+            const daXuLy = await ReviewerAssignment.find({
+                reviewerId: reviewer._id,
+                reviewerSubmissionId: { $ne: null }
+            });
+            const dangXuLy = await ReviewerAssignment.find({
+                reviewerId: reviewer._id,
+                reviewerSubmissionId: null
+            });
+
+            const x = daXuLy.length < 10 ? daXuLy.length : 10;
+            const appropriateRate = (80 + x * 1.45) / 10;
+            const res = {
+                _id: reviewer._id,
+                firstname: reviewer.firstname,
+                lastname: reviewer.lastname,
+                preferenceCategories: reviewer.preferenceCategoryId.map(el => el.name),
+                appropriateRate: appropriateRate.toFixed(2),
+                handled: daXuLy.length,
+                handling: dangXuLy.length
+            }
+            return res;
+        }, { concurrency: 50 });
+        console.log(listReviewers);
+
+        res.status(StatusCodes.OK).json({ reviewers: listReviewers });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             error: err
