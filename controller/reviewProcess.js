@@ -16,7 +16,7 @@ const Article = require('../model/article');
 const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
-const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE } = require('../config/constant');
+const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE, EDITOR_DECISION } = require('../config/constant');
 
 const { deleteFile } = require('../services/file-services');
 
@@ -211,6 +211,13 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
             .populate('editorId', 'firstname lastname')
             .populate('chiefEditorId', 'firstname lastname')
             .populate({
+                path: 'submissionId',
+                select: 'typeId',
+                populate: [
+                    { path: 'typeId', select: 'name -_id' },
+                ]
+            })
+            .populate({
                 path: 'reviewerAssignmentId',
                 select: 'reviewerId reviewerSubmissionId',
                 populate: [
@@ -250,9 +257,10 @@ exports.getMyEditorAssignments = async (req, res) => {
             .populate('chiefEditorId', 'firstname lastname')
             .populate({
                 path: 'submissionId',
-                select: 'title stageId authorId',
+                select: 'title stageId authorId typeId',
                 populate: [
                     { path: 'stageId', select: 'name value -_id' },
+                    { path: 'typeId', select: 'name -_id' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             })
@@ -298,9 +306,10 @@ exports.getMyReviewerAssignments = async (req, res) => {
             .populate({ path: 'editorId', select: 'firstname lastname' })
             .populate({
                 path: 'submissionId',
-                select: 'title stageId authorId',
+                select: 'title stageId authorId typeId',
                 populate: [
                     { path: 'stageId', select: 'name value -_id' },
+                    { path: 'typeId', select: 'name -_id' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             })
@@ -719,6 +728,7 @@ exports.authorSubmitRevision = async (req, res) => {
     const submissionId = req.params.submissionId;
     const authorId = req.user.userId;
     let categoryId = req.body.categoryId;
+    let typeId = req.body.typeId;
     const title = req.body.title;
     const abstract = req.body.abstract;
     // metadata
@@ -739,6 +749,9 @@ exports.authorSubmitRevision = async (req, res) => {
         if (categoryId === "") {
             categoryId = submission.categoryId.toString();
         }
+        if (typeId === "") {
+            typeId = submission.typeId.toString();
+        }
 
         if (!submission || !authorAssignment) {
             res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn không phải tác giả của bài báo này!' });
@@ -748,10 +761,11 @@ exports.authorSubmitRevision = async (req, res) => {
             });
         } else {
             submission.categoryId = categoryId;
+            submission.typeId = typeId;
             submission.title = title;
             submission.abstract = abstract;
 
-            if (req.files.attachment[0]) {
+            if (req.files.attachment) {
                 deleteFile(submission.attachmentUrl);
                 submission.attachmentFile = req.files.attachment[0].originalname;
                 submission.attachmentUrl = req.files.attachment[0].location;
@@ -808,18 +822,19 @@ exports.authorSubmitRevision = async (req, res) => {
 exports.acceptSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     const content = req.body.content;
-    const chiefEditorId = req.user.userId;
+    // const chiefEditorId = req.user.userId;
+    const permissionLevel = req.user.role.permissionLevel;
 
     try {
-        const prevCeSubmission = await ChiefEditorSubmission.exists({
-            submissionId: submissionId,
-            chiefEditorId: chiefEditorId
-        });
-        if (prevCeSubmission) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
-        } else {
-            const submission = await Submission.findById(submissionId);
-
+        if (permissionLevel === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
+            const chiefEditorId = req.user.userId;
+            const prevCeSubmission = await ChiefEditorSubmission.exists({
+                submissionId: submissionId,
+                chiefEditorId: chiefEditorId
+            });
+            if (prevCeSubmission) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
+            }
             // create chief editor submission
             const ceDecision = await ChiefEditorDecision.findOne(CHIEF_EDITOR_DECISION.ACCEPT_SUBMISSION);
             console.log(ceDecision);
@@ -830,45 +845,66 @@ exports.acceptSubmission = async (req, res) => {
                 chiefEditorDecisionId: ceDecision._id
             });
             await ceSubmission.save();
-
-            // sendEmail to Author
-
-            // update submission stage to PUBLISHED
-            const publishedStage = await Stage.findOne(STAGE.PUBLISHED);
-            submission.stageId = publishedStage._id;
-
-            // add submission log
-            const log = {
-                event: logTemplates.chiefEditorAcceptSubmission(),
-                createdAt: new Date()
-            };
-            submission.submissionLogs.push(log);
-            const savedSubmission = await submission.save();
-
-            // publish Article;
-            const article = new Article({
+        } else {
+            const editorId = req.user.userId;
+            const prevEditorAssignment = await EditorAssignment.findOne({
                 submissionId: submissionId,
-                title: savedSubmission.title,
-                categoryId: savedSubmission.categoryId
+                editorId: editorId,
+                editorSubmissionId: null
             });
-            await article.save();
+            if (!prevEditorAssignment) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
+            }
+            // create chief editor submission
+            const decision = await EditorDecision.findOne(EDITOR_DECISION.ACCEPT_SUBMISSION);
+            const editorSubmission = new EditorSubmission({
+                content: content,
+                editorDecisionId: decision._id
+            });
+            const savedEditorSubmission = await editorSubmission.save();
 
-            // push noti
-            const noti = new Notification({
-                senderId: chiefEditorId,
-                senderAvatar: req.user.avatar,
-                receiverId: submission.authorId,
-                type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
-                title: 'Kết quả thẩm định bài báo',
-                content: 'Bài báo #' + submission._id + ' đã được chấp nhận xuất bản.',
-                link: '/dashboard/submission/' + submissionId
-            });
-            await noti.save();
-
-            res.status(StatusCodes.OK).json({
-                message: 'Bài báo đã được chấp nhận xuất bản!'
-            });
+            prevEditorAssignment.editorSubmissionId = savedEditorSubmission._id;
+            await prevEditorAssignment.save();
         }
+        // sendEmail to Author
+
+        const submission = await Submission.findById(submissionId);
+
+        // update submission stage to PUBLISHED
+        const publishedStage = await Stage.findOne(STAGE.PUBLISHED);
+        submission.stageId = publishedStage._id;
+
+        // add submission log
+        const log = {
+            event: logTemplates.chiefEditorAcceptSubmission(),
+            createdAt: new Date()
+        };
+        submission.submissionLogs.push(log);
+        const savedSubmission = await submission.save();
+
+        // publish Article;
+        const article = new Article({
+            submissionId: submissionId,
+            title: savedSubmission.title,
+            categoryId: savedSubmission.categoryId
+        });
+        await article.save();
+
+        // push noti
+        const noti = new Notification({
+            senderId: req.user.userId,
+            senderAvatar: req.user.avatar,
+            receiverId: submission.authorId,
+            type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
+            title: 'Kết quả thẩm định bài báo',
+            content: 'Bài báo #' + submission._id + ' đã được chấp nhận xuất bản.',
+            link: '/dashboard/submission/' + submissionId
+        });
+        await noti.save();
+
+        res.status(StatusCodes.OK).json({
+            message: 'Bài báo đã được chấp nhận xuất bản!'
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -880,18 +916,19 @@ exports.acceptSubmission = async (req, res) => {
 exports.declineSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     const content = req.body.content;
-    const chiefEditorId = req.user.userId;
+    // const chiefEditorId = req.user.userId;
+    const permissionLevel = req.user.role.permissionLevel;
 
     try {
-        const prevCeSubmission = await ChiefEditorSubmission.exists({
-            submissionId: submissionId,
-            chiefEditorId: chiefEditorId
-        });
-        if (prevCeSubmission) {
-            res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
-        } else {
-            const submission = await Submission.findById(submissionId);
-
+        if (permissionLevel === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
+            const chiefEditorId = req.user.userId;
+            const prevCeSubmission = await ChiefEditorSubmission.exists({
+                submissionId: submissionId,
+                chiefEditorId: chiefEditorId
+            });
+            if (prevCeSubmission) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
+            }
             // create chief editor submission
             const ceDecision = await ChiefEditorDecision.findOne(CHIEF_EDITOR_DECISION.DECLINE_SUBMISSION);
             const ceSubmission = new ChiefEditorSubmission({
@@ -901,37 +938,60 @@ exports.declineSubmission = async (req, res) => {
                 chiefEditorDecisionId: ceDecision._id
             });
             await ceSubmission.save();
-
-            // sendEmail to Author
-
-            // update submission stage to END
-            const endStage = await Stage.findOne(STAGE.END);
-            submission.stageId = endStage._id;
-
-            // add submission log
-            const log = {
-                event: logTemplates.chiefEditorDeclineSubmission(),
-                createdAt: new Date()
-            };
-            submission.submissionLogs.push(log);
-            await submission.save();
-
-            // push noti
-            const noti = new Notification({
-                senderId: chiefEditorId,
-                senderAvatar: req.user.avatar,
-                receiverId: submission.authorId,
-                type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
-                title: 'Kết quả thẩm định bài báo',
-                content: 'Bài báo #' + submission._id + ' đã bị từ chối xuất bản.',
-                link: '/dashboard/submission/' + submissionId
+        } else {
+            const editorId = req.user.userId;
+            const prevEditorAssignment = await EditorAssignment.findOne({
+                submissionId: submissionId,
+                editorId: editorId,
+                editorSubmissionId: null
             });
-            await noti.save();
-
-            res.status(StatusCodes.OK).json({
-                message: 'Từ chối bài báo thành công!'
+            if (!prevEditorAssignment) {
+                res.status(StatusCodes.FORBIDDEN).json({ error: 'Bạn đã đưa ra quyết định với bài báo này trước đó!' });
+            }
+            // create chief editor submission
+            const decision = await EditorDecision.findOne(EDITOR_DECISION.DECLINE_SUBMISSION);
+            const editorSubmission = new EditorSubmission({
+                content: content,
+                editorDecisionId: decision._id
             });
+            const savedEditorSubmission = await editorSubmission.save();
+
+            prevEditorAssignment.editorSubmissionId = savedEditorSubmission._id;
+            await prevEditorAssignment.save();
         }
+
+        // sendEmail to Author
+
+        const submission = await Submission.findById(submissionId);
+
+        // update submission stage to END
+        const endStage = await Stage.findOne(STAGE.END);
+        submission.stageId = endStage._id;
+
+        // add submission log
+        const log = {
+            event: logTemplates.chiefEditorDeclineSubmission(),
+            createdAt: new Date()
+        };
+        submission.submissionLogs.push(log);
+        await submission.save();
+
+        // push noti
+        const noti = new Notification({
+            senderId: req.user.userId,
+            senderAvatar: req.user.avatar,
+            receiverId: submission.authorId,
+            type: NOTIFICATION_TYPE.CHIEF_EDITOR_TO_AUTHOR,
+            title: 'Kết quả thẩm định bài báo',
+            content: 'Bài báo #' + submission._id + ' đã bị từ chối xuất bản.',
+            link: '/dashboard/submission/' + submissionId
+        });
+        await noti.save();
+
+        res.status(StatusCodes.OK).json({
+            message: 'Từ chối bài báo thành công!'
+        });
+
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

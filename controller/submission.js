@@ -1,5 +1,6 @@
 const Submission = require('../model/submission');
 const Category = require('../model/category');
+const SubmissionType = require('../model/submission_type');
 const Stage = require('../model/stage');
 const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
@@ -17,6 +18,7 @@ exports.getAllSubmissions = async (req, res) => {
             .find()
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
+            .populate({ path: 'typeId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
@@ -45,6 +47,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
         const submissions = await Submission.find({ authorId: authorId })
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
+            .populate({ path: 'typeId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
@@ -69,6 +72,7 @@ exports.getSubmissionById = async (req, res) => {
         const submission = await Submission.findById(submissionId)
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
+            .populate({ path: 'typeId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
             .exec();
         res.status(StatusCodes.OK).json({ submission: submission });
@@ -82,6 +86,7 @@ exports.getSubmissionById = async (req, res) => {
 
 exports.createNewSubmission = async (req, res) => {
     let categoryId = req.body.categoryId;
+    let typeId = req.body.typeId;
     const title = req.body.title;
     const abstract = req.body.abstract;
     let attachmentFile = '';
@@ -95,6 +100,10 @@ exports.createNewSubmission = async (req, res) => {
     if (categoryId === "") {
         const category = await Category.find().limit(1);
         categoryId = category[0]._id;
+    }
+    if (typeId === "") {
+        const type = await SubmissionType.find().limit(1);
+        typeId = type[0]._id;
     }
 
     if (req.error) {
@@ -128,6 +137,7 @@ exports.createNewSubmission = async (req, res) => {
 
             const submission = new Submission({
                 categoryId: categoryId,
+                typeId: typeId,
                 title: title,
                 abstract: abstract,
                 attachmentFile: attachmentFile,
@@ -164,6 +174,7 @@ exports.createNewSubmission = async (req, res) => {
 exports.updateSubmission = async (req, res) => {
     const submissionId = req.params.submissionId;
     let categoryId = req.body.categoryId;
+    let typeId = req.body.typeId;
     const title = req.body.title;
     const abstract = req.body.abstract;
     // metadata
@@ -178,16 +189,21 @@ exports.updateSubmission = async (req, res) => {
         if (categoryId === "") {
             categoryId = submission.categoryId.toString();
         }
+        if (typeId === "") {
+            typeId = submission.typeId.toString();
+        }
+
         if (req.error) { // in file-service upload error.
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 error: req.error
             });
         } else {
             submission.categoryId = categoryId;
+            submission.typeId = typeId;
             submission.title = title;
             submission.abstract = abstract;
             submission.contributors = contributors.data;
-            if (req.files.attachment[0]) {
+            if (req.files.attachment) {
                 deleteFile(submission.attachmentUrl);
                 submission.attachmentFile = req.files.attachment[0].originalname;
                 submission.attachmentUrl = req.files.attachment[0].location;
@@ -252,7 +268,7 @@ exports.getSubmissionsByKeyword = async (req, res) => {
         const submissions = await Submission
             .find({ title: regex })
             .populate({ path: 'authorId', select: 'firstname lastname' })
-            .populate({ path: 'categoryId', select: 'name' })
+            .populate({ path: 'typeId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)

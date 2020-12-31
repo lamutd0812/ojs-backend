@@ -26,6 +26,11 @@ const submissionSchema = new mongoose.Schema({
         required: true,
         ref: 'Category'
     },
+    typeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'SubmissionType'
+    },
     authorId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

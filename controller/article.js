@@ -12,9 +12,10 @@ exports.getAllArticles = async (req, res) => {
             .find()
             .populate({
                 path: 'submissionId',
-                select: '-stageId -submissionLogs -categoryId',
+                select: '-stageId -submissionLogs',
                 populate: [
-                    { path: 'authorId', select: 'firstname lastname biography avatar' }
+                    { path: 'authorId', select: 'firstname lastname biography avatar' },
+                    { path: 'categoryId', select: 'name' }
                 ]
             })
             .populate('categoryId', 'name -_id')
@@ -45,9 +46,10 @@ exports.getMostViewedArticles = async (req, res) => {
             .find()
             .populate({
                 path: 'submissionId',
-                select: '-stageId -submissionLogs -categoryId',
+                select: '-stageId -submissionLogs',
                 populate: [
-                    { path: 'authorId', select: 'firstname lastname biography avatar' }
+                    { path: 'authorId', select: 'firstname lastname biography avatar' },
+                    { path: 'categoryId', select: 'name' }
                 ]
             })
             .populate('categoryId', 'name -_id')
@@ -78,9 +80,10 @@ exports.getMostDownloadedArticles = async (req, res) => {
             .find()
             .populate({
                 path: 'submissionId',
-                select: '-stageId -submissionLogs -categoryId',
+                select: '-stageId -submissionLogs',
                 populate: [
-                    { path: 'authorId', select: 'firstname lastname biography avatar' }
+                    { path: 'authorId', select: 'firstname lastname biography avatar' },
+                    { path: 'categoryId', select: 'name' }
                 ]
             })
             .populate('categoryId', 'name -_id')
@@ -109,9 +112,10 @@ exports.getArticleById = async (req, res) => {
             .findById(articleId)
             .populate({
                 path: 'submissionId',
-                select: '-stageId -submissionLogs -categoryId',
+                select: '-stageId -submissionLogs',
                 populate: [
-                    { path: 'authorId', select: 'firstname lastname biography avatar' }
+                    { path: 'authorId', select: 'firstname lastname biography avatar' },
+                    { path: 'categoryId', select: 'name' }
                 ]
             })
             .populate('categoryId', 'name -_id')
@@ -145,9 +149,10 @@ exports.getRelatedArticles = async (req, res) => {
             .find(cond)
             .populate({
                 path: 'submissionId',
-                select: '-stageId -submissionLogs -categoryId',
+                select: '-stageId -submissionLogs',
                 populate: [
-                    { path: 'authorId', select: 'firstname lastname' }
+                    { path: 'authorId', select: 'firstname lastname biography avatar' },
+                    { path: 'categoryId', select: 'name' }
                 ]
             })
             .populate('categoryId', 'name -_id')

@@ -107,13 +107,13 @@ router.put('/author-assignment/:submissionId',
 // Chief Editor Accept Submission
 router.put('/accept-submission/:submissionId',
     checkAuth,
-    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
+    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
     reviewProcessController.acceptSubmission);
 
 // Chief Editor Decline Submission
 router.put('/decline-submission/:submissionId',
     checkAuth,
-    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
+    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
     reviewProcessController.declineSubmission);
 
 // All: Get EditorSubmission
