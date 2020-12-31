@@ -24,12 +24,7 @@ const articleSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'Submission'
-    },
-    categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Category'
-    },
+    }
 });
 
 module.exports = mongoose.model('Article', articleSchema);

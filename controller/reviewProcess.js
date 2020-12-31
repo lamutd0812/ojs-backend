@@ -210,13 +210,13 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
         const editorAssignment = await EditorAssignment.findOne({ submissionId: submissionId })
             .populate('editorId', 'firstname lastname')
             .populate('chiefEditorId', 'firstname lastname')
-            .populate({
-                path: 'submissionId',
-                select: 'typeId',
-                populate: [
-                    { path: 'typeId', select: 'name -_id' },
-                ]
-            })
+            // .populate({
+            //     path: 'submissionId',
+            //     select: 'typeId',
+            //     populate: [
+            //         { path: 'typeId', select: 'name -_id' },
+            //     ]
+            // })
             .populate({
                 path: 'reviewerAssignmentId',
                 select: 'reviewerId reviewerSubmissionId',
@@ -885,8 +885,7 @@ exports.acceptSubmission = async (req, res) => {
         // publish Article;
         const article = new Article({
             submissionId: submissionId,
-            title: savedSubmission.title,
-            categoryId: savedSubmission.categoryId
+            title: savedSubmission.title
         });
         await article.save();
 

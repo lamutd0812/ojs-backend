@@ -15,10 +15,10 @@ exports.getAllArticles = async (req, res) => {
                 select: '-stageId -submissionLogs',
                 populate: [
                     { path: 'authorId', select: 'firstname lastname biography avatar' },
-                    { path: 'categoryId', select: 'name' }
+                    { path: 'categoryId', select: 'name' },
+                    { path: 'typeId', select: 'name' }
                 ]
             })
-            .populate('categoryId', 'name -_id')
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
@@ -49,10 +49,10 @@ exports.getMostViewedArticles = async (req, res) => {
                 select: '-stageId -submissionLogs',
                 populate: [
                     { path: 'authorId', select: 'firstname lastname biography avatar' },
-                    { path: 'categoryId', select: 'name' }
+                    { path: 'categoryId', select: 'name' },
+                    { path: 'typeId', select: 'name' }
                 ]
             })
-            .populate('categoryId', 'name -_id')
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
             .sort({ views: -1 })
@@ -83,10 +83,10 @@ exports.getMostDownloadedArticles = async (req, res) => {
                 select: '-stageId -submissionLogs',
                 populate: [
                     { path: 'authorId', select: 'firstname lastname biography avatar' },
-                    { path: 'categoryId', select: 'name' }
+                    { path: 'categoryId', select: 'name' },
+                    { path: 'typeId', select: 'name' }
                 ]
             })
-            .populate('categoryId', 'name -_id')
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
             .sort({ downloaded: -1 })
@@ -115,10 +115,10 @@ exports.getArticleById = async (req, res) => {
                 select: '-stageId -submissionLogs',
                 populate: [
                     { path: 'authorId', select: 'firstname lastname biography avatar' },
-                    { path: 'categoryId', select: 'name' }
+                    { path: 'categoryId', select: 'name' },
+                    { path: 'typeId', select: 'name' }
                 ]
             })
-            .populate('categoryId', 'name -_id')
             .exec();
 
         res.status(StatusCodes.OK).json({
@@ -152,10 +152,10 @@ exports.getRelatedArticles = async (req, res) => {
                 select: '-stageId -submissionLogs',
                 populate: [
                     { path: 'authorId', select: 'firstname lastname biography avatar' },
-                    { path: 'categoryId', select: 'name' }
+                    { path: 'categoryId', select: 'name' },
+                    { path: 'typeId', select: 'name' }
                 ]
             })
-            .populate('categoryId', 'name -_id')
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
             .sort({ downloaded: -1 })
