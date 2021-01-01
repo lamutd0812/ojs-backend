@@ -3,12 +3,31 @@ const { StatusCodes } = require('http-status-codes');
 const bcrypt = require('bcrypt');
 const { deleteImage } = require('../services/image-services');
 
+exports.getMyUserInfor = async (req, res) => {
+    const userId = req.user.userId;
+    try {
+        const user = await User
+            .findById(userId)
+            .select(' -password')
+            .populate('role', 'name')
+            .exec();
+        res.status(StatusCodes.OK).json({
+            user: user
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: err
+        });
+    }
+};
+
 exports.getUserInfor = async (req, res) => {
     const userId = req.params.userId;
     try {
         const user = await User
             .findById(userId)
-            .select('-email -password')
+            .select(' -password')
             .populate('role', 'name')
             .exec();
         res.status(StatusCodes.OK).json({
@@ -24,13 +43,25 @@ exports.getUserInfor = async (req, res) => {
 
 exports.updateMyUserInfor = async (req, res) => {
     const userId = req.user.userId;
+
+    const body = {
+        email: req.body.email,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        affiliation: req.body.affiliation,
+        biography: req.body.biography
+    }
+
     try {
-        const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true });
-        res.status(StatusCodes.OK).json({ updatedUser: updatedUser });
+        const updatedUser = await User.findByIdAndUpdate(userId, body, { new: true });
+        res.status(StatusCodes.OK).json({
+            message: 'Cập nhật thông tin cá nhân thành công!',
+            user: updatedUser
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -85,16 +116,17 @@ exports.changeAvatar = async (req, res) => {
                 });
                 //
                 const user = await User.findById(userId);
-                if (user.avatar !== "") {
-                    // delete current avatar
-                    const result = deleteImage(user.avatar);
-                    if (result.error) {
-                        res.status(StatusCodes.NOT_FOUND).json({
-                            message: "Delete Avatar Failed.",
-                            error: result.error
-                        });
-                    }
-                }
+                deleteImage(user.avatar);
+                // if (user.avatar !== "") {
+                //     // delete current avatar
+                //     const result = deleteImage(user.avatar);
+                //     if (result.error) {
+                //         res.status(StatusCodes.NOT_FOUND).json({
+                //             message: "Delete Avatar Failed.",
+                //             error: result.error
+                //         });
+                //     }
+                // }
                 user.avatar = req.file.location;
                 await user.save();
             } else {

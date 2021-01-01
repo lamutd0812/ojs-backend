@@ -5,9 +5,13 @@ const { uploadImage } = require('../services/image-services');
 
 const router = express.Router();
 
+router.get('/my',
+    checkAuth,
+    usersController.getMyUserInfor);
+
 router.get('/:userId', usersController.getUserInfor);
 
-router.put('/update-infor/my',
+router.put('/update-infor',
     checkAuth,
     usersController.updateMyUserInfor);
 

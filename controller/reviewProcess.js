@@ -117,7 +117,6 @@ exports.getReviewers = async (req, res) => {
             }
             return res;
         }, { concurrency: 50 });
-        console.log(listReviewers);
 
         res.status(StatusCodes.OK).json({ reviewers: listReviewers });
     } catch (err) {
