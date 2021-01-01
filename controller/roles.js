@@ -7,7 +7,7 @@ exports.getAllUserRoles = async (req, res) => {
         res.status(StatusCodes.OK).json({ roles: roles });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -22,7 +22,7 @@ exports.getUserRoleById = async (req, res) => {
         })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -35,7 +35,7 @@ exports.addUserRole = async (req, res) => {
         res.status(StatusCodes.CREATED).json({ role: newRole });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -48,7 +48,7 @@ exports.updateUserRole = async (req, res) => {
         res.status(StatusCodes.OK).json({ role: updatedRole });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -64,7 +64,7 @@ exports.deleteUserRole = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }

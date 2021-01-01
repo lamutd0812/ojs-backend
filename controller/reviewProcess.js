@@ -60,7 +60,7 @@ exports.getEditors = async (req, res) => {
         res.status(StatusCodes.OK).json({ editors: listEditors });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -121,7 +121,7 @@ exports.getReviewers = async (req, res) => {
         res.status(StatusCodes.OK).json({ reviewers: listReviewers });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -180,7 +180,7 @@ exports.assignEditor = async (req, res) => {
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -252,7 +252,7 @@ exports.assignReviewer = async (req, res) => {
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -294,7 +294,7 @@ exports.getEditorAssignmentBySubmission = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -343,7 +343,7 @@ exports.getMyEditorAssignments = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -379,7 +379,7 @@ exports.getMyReviewerAssignments = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -415,7 +415,7 @@ exports.getMyReviewerAssignmentBySubmission = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -552,7 +552,7 @@ exports.editReviewerSubmission = async (req, res) => {
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -679,7 +679,7 @@ exports.editEditorSubmission = async (req, res) => {
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -741,7 +741,7 @@ exports.requestSubmissionRevision = async (req, res) => {
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -773,7 +773,7 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -869,7 +869,7 @@ exports.authorSubmitRevision = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -962,7 +962,7 @@ exports.acceptSubmission = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -1049,7 +1049,7 @@ exports.declineSubmission = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -1070,7 +1070,7 @@ exports.getCESubmission = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };

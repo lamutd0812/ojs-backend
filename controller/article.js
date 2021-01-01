@@ -32,7 +32,7 @@ exports.getAllArticles = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -66,7 +66,7 @@ exports.getMostViewedArticles = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -100,7 +100,7 @@ exports.getMostDownloadedArticles = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -129,7 +129,7 @@ exports.getArticleById = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -169,7 +169,7 @@ exports.getRelatedArticles = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -187,7 +187,7 @@ exports.updateDownloadedTimes = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -209,7 +209,7 @@ exports.getArticlesByKeyword = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };

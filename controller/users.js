@@ -17,7 +17,7 @@ exports.getMyUserInfor = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -36,7 +36,7 @@ exports.getUserInfor = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -96,7 +96,7 @@ exports.changePassword = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -117,16 +117,6 @@ exports.changeAvatar = async (req, res) => {
                 //
                 const user = await User.findById(userId);
                 deleteImage(user.avatar);
-                // if (user.avatar !== "") {
-                //     // delete current avatar
-                //     const result = deleteImage(user.avatar);
-                //     if (result.error) {
-                //         res.status(StatusCodes.NOT_FOUND).json({
-                //             message: "Delete Avatar Failed.",
-                //             error: result.error
-                //         });
-                //     }
-                // }
                 user.avatar = req.file.location;
                 await user.save();
             } else {
@@ -138,7 +128,7 @@ exports.changeAvatar = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 }

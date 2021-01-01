@@ -57,7 +57,7 @@ exports.signup = async (req, res) => {
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -106,7 +106,7 @@ exports.signin = async (req, res) => {
         }
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -142,7 +142,7 @@ exports.getMyNotifications = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -186,7 +186,7 @@ exports.getAllMyNotifications = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };

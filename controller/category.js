@@ -7,7 +7,7 @@ exports.getAllCategories = async (req, res) => {
         res.status(StatusCodes.OK).json({ categories: categories });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -22,7 +22,7 @@ exports.getCategoryById = async (req, res) => {
         })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -35,7 +35,7 @@ exports.addCategory = async (req, res) => {
         res.status(StatusCodes.CREATED).json({ category: newcategory });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -48,7 +48,7 @@ exports.updateCategory = async (req, res) => {
         res.status(StatusCodes.OK).json({ category: updatedCategory });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -64,7 +64,7 @@ exports.deleteCategory = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }

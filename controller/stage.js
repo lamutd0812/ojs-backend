@@ -7,7 +7,7 @@ exports.getAllStages = async (req, res) => {
         res.status(StatusCodes.OK).json({ stages: stages });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -22,7 +22,7 @@ exports.getStageById = async (req, res) => {
         })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -35,7 +35,7 @@ exports.addStage = async (req, res) => {
         res.status(StatusCodes.CREATED).json({ stage: newStage });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -48,7 +48,7 @@ exports.updateStage = async (req, res) => {
         res.status(StatusCodes.OK).json({ stage: updatedStage });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -64,7 +64,7 @@ exports.deleteStage = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }

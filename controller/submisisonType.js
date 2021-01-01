@@ -7,7 +7,7 @@ exports.getAllTypess = async (req, res) => {
         res.status(StatusCodes.OK).json({ types: types });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -22,7 +22,7 @@ exports.getTypeById = async (req, res) => {
         })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -35,7 +35,7 @@ exports.addType = async (req, res) => {
         res.status(StatusCodes.CREATED).json({ type: newType });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -48,7 +48,7 @@ exports.updateType = async (req, res) => {
         res.status(StatusCodes.OK).json({ type: updatedType });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -64,7 +64,7 @@ exports.deleteType = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }

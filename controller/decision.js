@@ -10,7 +10,7 @@ exports.getEditorDecisions = async (req, res) => {
         res.status(StatusCodes.OK).json({ editorDecisions: editorDecisions });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -25,7 +25,7 @@ exports.getEditorDecisionById = async (req, res) => {
         })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -38,7 +38,7 @@ exports.addEditorDecision = async (req, res) => {
         res.status(StatusCodes.CREATED).json({ editorDecision: newEditorDecision });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -51,7 +51,7 @@ exports.updateEditorDecision = async (req, res) => {
         res.status(StatusCodes.OK).json({ editorDecision: updatedEditorDecision });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -67,7 +67,7 @@ exports.deleteEditorDecision = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -80,7 +80,7 @@ exports.getReviewerDecisions = async (req, res) => {
         res.status(StatusCodes.OK).json({ reviewerDecisions: reviewerDecisions });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -95,7 +95,7 @@ exports.getReviewerDecisionById = async (req, res) => {
         })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -108,7 +108,7 @@ exports.addReviewerDecision = async (req, res) => {
         res.status(StatusCodes.CREATED).json({ reviewerDecision: newReviewerDecision });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -121,7 +121,7 @@ exports.updateReviewerDecision = async (req, res) => {
         res.status(StatusCodes.OK).json({ reviewerDecision: updatedReviewerDecision });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -137,7 +137,7 @@ exports.deleteReviewerDecision = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -150,7 +150,7 @@ exports.getChiefEditorDecisions = async (req, res) => {
         res.status(StatusCodes.OK).json({ chiefEditorDecisions: chiefEditorDecisions });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -165,7 +165,7 @@ exports.getChiefEditorDecisionById = async (req, res) => {
         })
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -178,7 +178,7 @@ exports.addChiefEditorDecision = async (req, res) => {
         res.status(StatusCodes.CREATED).json({ chiefEditorDecision: newChiefEditorDecision });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -191,7 +191,7 @@ exports.updateChiefEditorDecision = async (req, res) => {
         res.status(StatusCodes.OK).json({ chiefEditorDecision: updatedChiefEditorDecision });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }
@@ -207,7 +207,7 @@ exports.deleteChiefEditorDecision = async (req, res) => {
         });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
         console.log(err);
     }

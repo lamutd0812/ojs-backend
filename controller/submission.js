@@ -33,7 +33,7 @@ exports.getAllSubmissions = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -61,7 +61,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -79,7 +79,7 @@ exports.getSubmissionById = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -234,7 +234,7 @@ exports.updateSubmission = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -254,7 +254,7 @@ exports.deleteSubmission = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
@@ -283,7 +283,7 @@ exports.getSubmissionsByKeyword = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: err
+            error: "Internal Server Error."
         });
     }
 };
