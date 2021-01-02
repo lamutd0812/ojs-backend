@@ -62,6 +62,12 @@ const submissionSchema = new mongoose.Schema({
         url: String,
         filename: String
     }],
+    magazineName: {
+        type: String
+    },
+    DOI: {
+        type: String
+    },
 }, {
     timestamps: true
 });

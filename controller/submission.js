@@ -91,6 +91,9 @@ exports.createNewSubmission = async (req, res) => {
     const abstract = req.body.abstract;
     let attachmentFile = '';
     let attachmentUrl = '';
+    //with published research
+    const magazineName = req.body.magazineName;
+    const DOI = req.body.DOI;
     // metadata
     const contributors = JSON.parse(req.body.contributors);
     let metadata = [];
@@ -146,8 +149,12 @@ exports.createNewSubmission = async (req, res) => {
                 stageId: submissionStage._id,
                 submissionLogs: logs,
                 contributors: contributors.data,
-                metadata: metadata
+                metadata: metadata,
             });
+            if (magazineName && DOI) {
+                submission.magazineName = magazineName;
+                submission.DOI = DOI;
+            }
             const newSubmission = await submission.save();
 
             // push noti
