@@ -24,4 +24,7 @@ router.put('/change-avatar',
     uploadImage.single('avatar'),
     usersController.changeAvatar);
 
+router.get('/all/preference-categories',
+    usersController.getAllPreferenceCategories);
+
 module.exports = router;

@@ -17,6 +17,8 @@ exports.signup = async (req, res) => {
     const affiliation = req.body.affiliation;
     const biography = req.body.biography;
     const toBeReviewer = req.body.toBeReviewer;
+    const preferenceCategoryId = req.body.preferenceCategoryId;
+
     try {
         const userCheck = await User.exists({ username: username });
         const emailCheck = await User.exists({ email: email });
@@ -48,6 +50,9 @@ exports.signup = async (req, res) => {
                 avatar: avatar,
                 role: role
             });
+            if (preferenceCategoryId) {
+                user.preferenceCategoryId = preferenceCategoryId;
+            }
 
             const newUser = await user.save();
             res.status(StatusCodes.CREATED).json({

@@ -1,4 +1,5 @@
 const User = require('../model/user');
+const Category = require('../model/category');
 const { StatusCodes } = require('http-status-codes');
 const bcrypt = require('bcrypt');
 const { deleteImage } = require('../services/image-services');
@@ -10,7 +11,16 @@ exports.getMyUserInfor = async (req, res) => {
             .findById(userId)
             .select(' -password')
             .populate('role', 'name')
+            .populate('preferenceCategoryId')
+            .lean()
             .exec();
+        const preference = user.preferenceCategoryId.map(c => {
+            return {
+                value: c._id,
+                label: c.name
+            };
+        });
+        user.preferenceCategoryId = preference;
         res.status(StatusCodes.OK).json({
             user: user
         });
@@ -49,7 +59,8 @@ exports.updateMyUserInfor = async (req, res) => {
         firstname: req.body.firstname,
         lastname: req.body.lastname,
         affiliation: req.body.affiliation,
-        biography: req.body.biography
+        biography: req.body.biography,
+        preferenceCategoryId: req.body.preferenceCategoryId
     }
 
     try {
@@ -131,4 +142,23 @@ exports.changeAvatar = async (req, res) => {
             error: "Internal Server Error."
         });
     }
-}
+};
+
+exports.getAllPreferenceCategories = async (req, res) => {
+    try {
+        const categories = await Category.find();
+        res.status(StatusCodes.OK).json({
+            categories: categories.map(c => {
+                return {
+                    value: c._id,
+                    label: c.name
+                };
+            })
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Internal Server Error."
+        });
+    }
+}; 
