@@ -605,6 +605,17 @@ exports.createEditorSubmission = async (req, res) => {
                 editorAssignment.editorSubmissionId = rs._id;
                 await editorAssignment.save();
 
+                // set authorRevision isAccepted = true
+                const authorAssignment = await AuthorAssignment.findOne({
+                    submissionId: submissionId,
+                    editorId: editorId
+                });
+                if (authorAssignment && authorAssignment.authorRevisionId) {
+                    const authorRevision = await AuthorRevision.findById(authorAssignment.authorRevisionId);
+                    authorRevision.isAccepted = true;
+                    await authorRevision.save();
+                }
+
                 // add submission log
                 const submission = await Submission.findById(submissionId);
                 const log = {
@@ -892,7 +903,6 @@ exports.acceptSubmission = async (req, res) => {
             }
             // create chief editor submission
             const ceDecision = await ChiefEditorDecision.findOne(CHIEF_EDITOR_DECISION.ACCEPT_SUBMISSION);
-            console.log(ceDecision);
             const ceSubmission = new ChiefEditorSubmission({
                 submissionId: submissionId,
                 chiefEditorId: chiefEditorId,
