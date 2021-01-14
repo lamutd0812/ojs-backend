@@ -160,7 +160,6 @@ exports.createNewSubmission = async (req, res) => {
             // push noti
             const noti = new Notification({
                 senderId: authorId,
-                senderAvatar: req.user.avatar,
                 type: NOTIFICATION_TYPE.AUTHOR_TO_CHIEF_EDITOR,
                 title: 'Bài báo mới',
                 content: 'Tác giả ' + req.user.fullname + ' đã submit bài báo lên hệ thống.',
@@ -184,6 +183,9 @@ exports.updateSubmission = async (req, res) => {
     let typeId = req.body.typeId;
     const title = req.body.title;
     const abstract = req.body.abstract;
+    //with published research
+    const magazineName = req.body.magazineName;
+    const DOI = req.body.DOI;
     // metadata
     const contributors = JSON.parse(req.body.contributors);
     let metadata = [];
@@ -210,6 +212,15 @@ exports.updateSubmission = async (req, res) => {
             submission.title = title;
             submission.abstract = abstract;
             submission.contributors = contributors.data;
+            // with published research
+            if (magazineName && DOI) {
+                submission.magazineName = magazineName;
+                submission.DOI = DOI;
+            } else {
+                submission.magazineName = null;
+                submission.DOI = null;
+            }
+            
             if (req.files.attachment) {
                 deleteFile(submission.attachmentUrl);
                 submission.attachmentFile = req.files.attachment[0].originalname;

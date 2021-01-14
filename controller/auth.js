@@ -131,6 +131,7 @@ exports.getMyNotifications = async (req, res) => {
                 .find({
                     type: { $in: types }
                 })
+                .populate('senderId', 'avatar')
                 .sort({ _id: -1 })
                 .limit(6);
         } else {
@@ -138,6 +139,7 @@ exports.getMyNotifications = async (req, res) => {
                 .find({
                     receiverId: receiverId
                 })
+                .populate('senderId', 'avatar')
                 .sort({ _id: -1 })
                 .limit(6);
         }
@@ -170,6 +172,7 @@ exports.getAllMyNotifications = async (req, res) => {
                 .find({
                     type: { $in: types }
                 })
+                .populate('senderId', 'avatar')
                 .skip((page - 1) * ITEMS_PER_PAGE)
                 .limit(ITEMS_PER_PAGE)
                 .sort({ _id: -1 });
@@ -179,6 +182,7 @@ exports.getAllMyNotifications = async (req, res) => {
                 .find({
                     receiverId: receiverId
                 })
+                .populate('senderId', 'avatar')
                 .skip((page - 1) * ITEMS_PER_PAGE)
                 .limit(ITEMS_PER_PAGE)
                 .sort({ _id: -1 });
