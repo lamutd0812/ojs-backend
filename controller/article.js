@@ -1,7 +1,8 @@
 const Article = require('../model/article');
-const Submission = require('../model/submission');
 const { StatusCodes } = require('http-status-codes');
-const bluebird = require('bluebird');
+const Comment = require('../model/comment');
+const Reply = require('../model/reply');
+const mongoose = require('mongoose');
 
 exports.getAllArticles = async (req, res) => {
     const page = +req.query.page || 1;
@@ -206,6 +207,90 @@ exports.getArticlesByKeyword = async (req, res) => {
         //     .select("title")
         //     .exec();
         res.status(StatusCodes.OK).json({ articles: articles });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Internal Server Error."
+        });
+    }
+};
+
+exports.createComment = async (req, res) => {
+    const content = req.body.content;
+    const articleId = req.params.articleId;
+    const userId = req.user.userId;
+    try {
+        const comment = new Comment({
+            content,
+            articleId,
+            userId
+        });
+        const newComment = await comment.save();
+        res.status(StatusCodes.CREATED).json({
+            comment: newComment
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Internal Server Error."
+        });
+    }
+};
+
+exports.createReplyOfComment = async (req, res) => {
+    const content = req.body.content;
+    const commentId = req.params.commentId;
+    const userId = req.user.userId;
+    try {
+        const reply = new Reply({
+            content,
+            commentId,
+            userId
+        });
+        const newReply = await reply.save();
+        res.status(StatusCodes.CREATED).json({
+            reply: newReply
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Internal Server Error."
+        });
+    }
+};
+
+exports.getCommentsOfArticle = async (req, res) => {
+    const articleId = req.params.articleId;
+    try {
+        const comments = await Comment.aggregate([
+            {
+                $match: {
+                    articleId: mongoose.Types.ObjectId(articleId)
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $lookup: {
+                    from: "replies",
+                    localField: "_id",
+                    foreignField: "commentId",
+                    as: "replies"
+                }
+            }
+        ]);
+        res.status(StatusCodes.OK).json({
+            comments: comments
+        });
     } catch (err) {
         console.log(err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

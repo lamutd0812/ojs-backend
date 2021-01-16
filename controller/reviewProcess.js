@@ -18,6 +18,7 @@ const { StatusCodes } = require('http-status-codes');
 const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE, EDITOR_DECISION } = require('../config/constant');
 const bluebird = require('bluebird');
+const transporter = require('../utils/transporter');
 
 const { deleteFile } = require('../services/file-services');
 
@@ -51,6 +52,7 @@ exports.getEditors = async (req, res) => {
                 _id: editor._id,
                 firstname: editor.firstname,
                 lastname: editor.lastname,
+                email: editor.email,
                 handled: daXuLy.length,
                 handling: dangXuLy.length
             }
@@ -110,6 +112,7 @@ exports.getReviewers = async (req, res) => {
                 _id: reviewer._id,
                 firstname: reviewer.firstname,
                 lastname: reviewer.lastname,
+                email: reviewer.email,
                 preferenceCategories: reviewer.preferenceCategoryId.map(el => el.name),
                 appropriateRate: appropriateRate.toFixed(2),
                 handled: daXuLy.length,
@@ -133,6 +136,9 @@ exports.assignEditor = async (req, res) => {
     const editorId = req.body.editorId;
     const dueDate = req.body.dueDate;
     const message = req.body.message;
+
+    const editorEmail = req.body.editorEmail;
+    const htmlContent = req.body.htmlContent;
     try {
         const prevEditorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
         if (prevEditorAssignment) {
@@ -172,6 +178,23 @@ exports.assignEditor = async (req, res) => {
                 link: '/dashboard/editor/assignment/' + submissionId
             });
             await noti.save();
+
+            // send email
+            const emailSent = transporter.verify((error, success) => {
+                if(error) {
+                    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                        error: "Send email failed."
+                    });
+                }
+                const mail = {
+                    to: editorEmail,
+                    from: process.env.email_user,
+                    subject: "Yêu cầu chủ trì thẩm định bài báo trên VNOJS",
+                    html: htmlContent
+                }
+                console.log("Sent an email to " + editorEmail);
+                return transporter.sendMail(mail);
+            })
 
             res.status(StatusCodes.OK).json({
                 message: 'Chỉ định biên tập viên thành công!',

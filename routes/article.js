@@ -1,5 +1,6 @@
 const express = require('express');
 const articleController = require('../controller/article');
+const { checkAuth } = require('../middlewares/check-auth');
 
 const router = express.Router();
 
@@ -23,5 +24,17 @@ router.put('/update-downloaded-count/:articleId', articleController.updateDownlo
 
 // Search Submisison By Keyword
 router.get('/search/all', articleController.getArticlesByKeyword);
+
+// Create Comment of an Article
+router.post('/comments/:articleId',
+    checkAuth,
+    articleController.createComment);
+
+// Create Reply of an Comment
+router.post('/replies/:commentId',
+    checkAuth,
+    articleController.createReplyOfComment);
+
+router.get('/comments/:articleId', articleController.getCommentsOfArticle);
 
 module.exports = router;
