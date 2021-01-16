@@ -70,7 +70,7 @@ exports.getSubmissionById = async (req, res) => {
     const submissionId = req.params.submissionId;
     try {
         const submission = await Submission.findById(submissionId)
-            .populate({ path: 'authorId', select: 'firstname lastname' })
+            .populate({ path: 'authorId', select: 'firstname lastname email' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'typeId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })

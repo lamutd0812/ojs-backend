@@ -85,7 +85,7 @@ router.put('/editor-submission/:submissionId',
 router.post('/request-author-revision/:submissionId',
     checkAuth,
     restrict([USER_ROLES.EDITOR.permissionLevel]),
-    reviewProcessController.requestSubmissionRevision);
+    reviewProcessController.requestAuthorRevision);
 
 // Author and Editor get Author Assignment
 router.get('/author-assignment/:submissionId',

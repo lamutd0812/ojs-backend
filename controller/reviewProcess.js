@@ -179,7 +179,7 @@ exports.assignEditor = async (req, res) => {
             });
             await noti.save();
 
-            // send email
+            // send email to editor
             const emailSent = transporter.verify((error, success) => {
                 if(error) {
                     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -192,9 +192,9 @@ exports.assignEditor = async (req, res) => {
                     subject: "Yêu cầu chủ trì thẩm định bài báo trên VNOJS",
                     html: htmlContent
                 }
-                console.log("Sent an email to " + editorEmail);
+                console.log("------------- SENT AN EMAIL TO " + editorEmail + "-----------------------");
                 return transporter.sendMail(mail);
-            })
+            });
 
             res.status(StatusCodes.OK).json({
                 message: 'Chỉ định biên tập viên thành công!',
@@ -214,6 +214,9 @@ exports.assignReviewer = async (req, res) => {
     const reviewerId = req.body.reviewerId;
     const dueDate = req.body.dueDate;
     const message = req.body.message;
+
+    const reviewerEmail = req.body.reviewerEmail;
+    const htmlContent = req.body.htmlContent;
     try {
         const reviewerAssignments = await ReviewerAssignment.find({ submissionId: submissionId });
         const prevReviewerAssignment = reviewerAssignments.filter(ra =>
@@ -266,6 +269,24 @@ exports.assignReviewer = async (req, res) => {
                 link: '/dashboard/reviewer/assignment/' + submissionId
             });
             await noti.save();
+
+            // send email to reviewer
+            const emailSent = transporter.verify((error, success) => {
+                if(error) {
+                    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                        error: "Send email failed."
+                    });
+                }
+                const mail = {
+                    to: reviewerEmail,
+                    from: process.env.email_user,
+                    subject: "Yêu cầu thẩm định bài báo trên VNOJS",
+                    html: htmlContent
+                }
+                console.log("------------- SENT AN EMAIL TO " + reviewerEmail + "-----------------------");
+                
+                return transporter.sendMail(mail);
+            });
 
             res.status(StatusCodes.OK).json({
                 message: 'Chỉ định thẩm định viên thành công!'
@@ -333,7 +354,7 @@ exports.getMyEditorAssignments = async (req, res) => {
             .populate('chiefEditorId', 'firstname lastname')
             .populate({
                 path: 'submissionId',
-                select: 'title stageId authorId typeId',
+                select: 'title submissionLogs stageId authorId typeId',
                 populate: [
                     { path: 'stageId', select: 'name value -_id' },
                     { path: 'typeId', select: 'name -_id' },
@@ -715,11 +736,14 @@ exports.editEditorSubmission = async (req, res) => {
     }
 };
 
-exports.requestSubmissionRevision = async (req, res) => {
+exports.requestAuthorRevision = async (req, res) => {
     const submissionId = req.params.submissionId;
     const editorId = req.user.userId; // assigner
     const dueDate = req.body.dueDate;
     const message = req.body.message;
+
+    const authorEmail = req.body.authorEmail;
+    const htmlContent = req.body.htmlContent;
     try {
         const prevEditorAssignment = await EditorAssignment.findOne({ submissionId: submissionId });
         const prevAuthorAssignment = await AuthorAssignment.exists({ submissionId: submissionId });
@@ -763,6 +787,23 @@ exports.requestSubmissionRevision = async (req, res) => {
                 link: '/dashboard/submission/' + submissionId
             });
             await noti.save();
+
+            // send email to author
+            const emailSent = transporter.verify((error, success) => {
+                if(error) {
+                    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                        error: "Send email failed."
+                    });
+                }
+                const mail = {
+                    to: authorEmail,
+                    from: process.env.email_user,
+                    subject: "Yêu cầu chỉnh sửa bài báo trên VNOJS",
+                    html: htmlContent
+                }
+                console.log("------------- SENT AN EMAIL TO " + authorEmail + "-----------------------");
+                return transporter.sendMail(mail);
+            });
 
             res.status(StatusCodes.OK).json({
                 message: 'Yêu cầu tác giả chỉnh sửa bài báo thành công!',
@@ -908,6 +949,8 @@ exports.acceptSubmission = async (req, res) => {
     // const chiefEditorId = req.user.userId;
     const permissionLevel = req.user.role.permissionLevel;
 
+    const authorEmail = req.body.authorEmail;
+    const htmlContent = req.body.htmlContent;
     try {
         if (permissionLevel === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
             const chiefEditorId = req.user.userId;
@@ -948,7 +991,23 @@ exports.acceptSubmission = async (req, res) => {
             prevEditorAssignment.editorSubmissionId = savedEditorSubmission._id;
             await prevEditorAssignment.save();
         }
-        // sendEmail to Author
+        
+        // send email to author
+        const emailSent = transporter.verify((error, success) => {
+            if(error) {
+                res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                    error: "Send email failed."
+                });
+            }
+            const mail = {
+                to: authorEmail,
+                from: process.env.email_user,
+                subject: "Chấp nhận xuất bản bài báo trên VNOJS",
+                html: htmlContent
+            }
+            console.log("------------- SENT AN EMAIL TO " + authorEmail + "-----------------------");
+            return transporter.sendMail(mail);
+        });
 
         const submission = await Submission.findById(submissionId);
 
@@ -999,6 +1058,8 @@ exports.declineSubmission = async (req, res) => {
     // const chiefEditorId = req.user.userId;
     const permissionLevel = req.user.role.permissionLevel;
 
+    const authorEmail = req.body.authorEmail;
+    const htmlContent = req.body.htmlContent;
     try {
         if (permissionLevel === USER_ROLES.CHIEF_EDITOR.permissionLevel) {
             const chiefEditorId = req.user.userId;
@@ -1040,7 +1101,22 @@ exports.declineSubmission = async (req, res) => {
             await prevEditorAssignment.save();
         }
 
-        // sendEmail to Author
+        // send email to author
+        const emailSent = transporter.verify((error, success) => {
+            if(error) {
+                res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                    error: "Send email failed."
+                });
+            }
+            const mail = {
+                to: authorEmail,
+                from: process.env.email_user,
+                subject: "Kết luận thẩm định bài báo trên VNOJS",
+                html: htmlContent
+            }
+            console.log("------------- SENT AN EMAIL TO " + authorEmail + "-----------------------");
+            return transporter.sendMail(mail);
+        });
 
         const submission = await Submission.findById(submissionId);
 
