@@ -2,6 +2,7 @@ const Article = require('../model/article');
 const { StatusCodes } = require('http-status-codes');
 const Comment = require('../model/comment');
 const Reply = require('../model/reply');
+const bluebird = require('bluebird');
 const mongoose = require('mongoose');
 
 exports.getAllArticles = async (req, res) => {
@@ -227,6 +228,7 @@ exports.createComment = async (req, res) => {
         });
         const newComment = await comment.save();
         res.status(StatusCodes.CREATED).json({
+            message: "Bình luận thành công!",
             comment: newComment
         });
     } catch (err) {
@@ -249,6 +251,7 @@ exports.createReplyOfComment = async (req, res) => {
         });
         const newReply = await reply.save();
         res.status(StatusCodes.CREATED).json({
+            message: "Trả lời bình luận thành công!",
             reply: newReply
         });
     } catch (err) {
@@ -282,9 +285,47 @@ exports.getCommentsOfArticle = async (req, res) => {
             {
                 $lookup: {
                     from: "replies",
-                    localField: "_id",
-                    foreignField: "commentId",
+                    let: { cmtId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ["$commentId", "$$cmtId"]
+                                }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "userId",
+                                foreignField: "_id",
+                                as: "user"
+                            }
+                        },
+                        {
+                            $unwind: "$user"
+                        }
+                    ],
                     as: "replies"
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "content": 1,
+                    "articleId": 1,
+                    "createdAt": 1,
+                    "user._id": 1,
+                    "user.firstname": 1,
+                    "user.lastname": 1,
+                    "user.avatar": 1,
+                    "replies._id": 1,
+                    "replies.content": 1,
+                    "replies.commentId": 1,
+                    "replies.createdAt": 1,
+                    "replies.user.firstname": 1,
+                    "replies.user.lastname": 1,
+                    "replies.user.avatar": 1,
                 }
             }
         ]);
