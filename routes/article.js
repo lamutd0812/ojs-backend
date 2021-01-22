@@ -37,4 +37,9 @@ router.post('/replies/:commentId',
 
 router.get('/comments/:articleId', articleController.getCommentsOfArticle);
 
+// Get Author's Article
+router.get('/my/all',
+    checkAuth,
+    articleController.getMyArticles);
+
 module.exports = router;

@@ -327,10 +327,95 @@ exports.getCommentsOfArticle = async (req, res) => {
                     "replies.user.lastname": 1,
                     "replies.user.avatar": 1,
                 }
-            }
+            },
         ]);
         res.status(StatusCodes.OK).json({
             comments: comments
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Internal Server Error."
+        });
+    }
+};
+
+exports.getMyArticles = async (req, res) => {
+    const userId = req.user.userId;
+    const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
+    try {
+        const articles = await Article.aggregate([
+            {
+                $lookup: {
+                    from: "submissions",
+                    localField: "submissionId",
+                    foreignField: "_id",
+                    as: "submission"
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "publishedDate": 1,
+                    "views": 1,
+                    "downloaded": 1,
+                    "title": 1,
+                    "submission._id": 1,
+                    "submission.categoryId": 1,
+                    "submission.abstract": 1,
+                    "submission.authorId": 1,
+                    "submission.title": 1,
+                    "submission.attachmentFile": 1,
+                    "submission.attachmentUrl": 1,
+                    "submission.typeId": 1,
+                }
+            },
+            {
+                $unwind: "$submission"
+            },
+            {
+                $match: {
+                    "submission.authorId": mongoose.Types.ObjectId(userId)
+                }
+            },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "submission.categoryId",
+                    foreignField: "_id",
+                    as: "category"
+                }
+            },
+            {
+                $unwind: "$category"
+            },
+            {
+                $lookup: {
+                    from: "submission_types",
+                    localField: "submission.typeId",
+                    foreignField: "_id",
+                    as: "type"
+                }
+            },
+            {
+                $unwind: "$type"
+            },
+            {
+                $sort: { views: -1 },
+            },
+            {
+                $skip: (page - 1) * ITEMS_PER_PAGE,
+            },
+            {
+                $limit: ITEMS_PER_PAGE,
+            },
+        ]);
+
+        res.status(StatusCodes.OK).json({
+            articles: articles,
+            total: articles.length,
+            currentPage: page
         });
     } catch (err) {
         console.log(err);
