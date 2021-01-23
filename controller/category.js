@@ -3,7 +3,7 @@ const { StatusCodes } = require('http-status-codes');
 
 exports.getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find();
+        const categories = await Category.find().select('name');
         res.status(StatusCodes.OK).json({ categories: categories });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

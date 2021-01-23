@@ -81,7 +81,6 @@ exports.getReviewers = async (req, res) => {
         const submission = await Submission
             .findById(submissionId)
             .select('authorId categoryId');
-        // .populate('categoryId', 'name');
         ids.push(submission.authorId);
         reviewerAssignments.map(assignment => {
             return ids.push(assignment.reviewerId);
@@ -181,7 +180,7 @@ exports.assignEditor = async (req, res) => {
 
             // send email to editor
             const emailSent = transporter.verify((error, success) => {
-                if(error) {
+                if (error) {
                     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                         error: "Send email failed."
                     });
@@ -272,7 +271,7 @@ exports.assignReviewer = async (req, res) => {
 
             // send email to reviewer
             const emailSent = transporter.verify((error, success) => {
-                if(error) {
+                if (error) {
                     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                         error: "Send email failed."
                     });
@@ -284,7 +283,7 @@ exports.assignReviewer = async (req, res) => {
                     html: htmlContent
                 }
                 console.log("------------- SENT AN EMAIL TO " + reviewerEmail + "-----------------------");
-                
+
                 return transporter.sendMail(mail);
             });
 
@@ -346,18 +345,23 @@ exports.getMyEditorAssignments = async (req, res) => {
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;
     const editorId = req.user.userId;
+    // filter
+    const stageId = req.query.stageId || "";
+    const categoryId = req.query.categoryId || "";
+    const typeId = req.query.typeId || "";
+
     try {
-        const total = await EditorAssignment.countDocuments({ editorId: editorId });
-        const editorAssignments = await EditorAssignment
-            .find({ editorId: editorId })
+        let editorAssignments = await EditorAssignment
+            .find({ editorId })
             .populate('editorId', 'firstname lastname')
             .populate('chiefEditorId', 'firstname lastname')
             .populate({
                 path: 'submissionId',
-                select: 'title submissionLogs stageId authorId typeId',
+                select: 'title submissionLogs categoryId stageId authorId typeId',
                 populate: [
-                    { path: 'stageId', select: 'name value -_id' },
-                    { path: 'typeId', select: 'name -_id' },
+                    { path: 'categoryId', select: 'name' },
+                    { path: 'stageId', select: 'name value' },
+                    { path: 'typeId', select: 'name' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             })
@@ -377,10 +381,22 @@ exports.getMyEditorAssignments = async (req, res) => {
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
+            .lean()
             .exec();
+
+        if (typeId !== "") {
+            editorAssignments = editorAssignments.filter(ea => ea.submissionId.typeId._id.toString() === typeId);
+        }
+        if (categoryId !== "") {
+            editorAssignments = editorAssignments.filter(ea => ea.submissionId.categoryId._id.toString() === categoryId);
+        }
+        if (stageId !== "") {
+            editorAssignments = editorAssignments.filter(ea => ea.submissionId.stageId._id.toString() === stageId);
+        }
+
         res.status(StatusCodes.OK).json({
             editorAssignments: editorAssignments,
-            total: total,
+            total: editorAssignments.length,
             currentPage: page
         });
     } catch (err) {
@@ -790,7 +806,7 @@ exports.requestAuthorRevision = async (req, res) => {
 
             // send email to author
             const emailSent = transporter.verify((error, success) => {
-                if(error) {
+                if (error) {
                     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                         error: "Send email failed."
                     });
@@ -991,10 +1007,10 @@ exports.acceptSubmission = async (req, res) => {
             prevEditorAssignment.editorSubmissionId = savedEditorSubmission._id;
             await prevEditorAssignment.save();
         }
-        
+
         // send email to author
         const emailSent = transporter.verify((error, success) => {
-            if(error) {
+            if (error) {
                 res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                     error: "Send email failed."
                 });
@@ -1103,7 +1119,7 @@ exports.declineSubmission = async (req, res) => {
 
         // send email to author
         const emailSent = transporter.verify((error, success) => {
-            if(error) {
+            if (error) {
                 res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                     error: "Send email failed."
                 });

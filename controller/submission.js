@@ -12,10 +12,26 @@ const { deleteFile } = require('../services/file-services');
 exports.getAllSubmissions = async (req, res) => {
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;
+    //filter
+    const stageId = req.query.stageId || "";
+    const categoryId = req.query.categoryId || "";
+    const typeId = req.query.typeId || "";
+
+    const cond = {};
+    if (categoryId !== "") {
+        Object.assign(cond, { categoryId });
+    }
+    if (stageId !== "") {
+        Object.assign(cond, { stageId });
+    }
+    if (typeId !== "") {
+        Object.assign(cond, { typeId });
+    }
+
     try {
-        const total = await Submission.countDocuments();
+        const total = await Submission.countDocuments(cond);
         const submissions = await Submission
-            .find()
+            .find(cond)
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'typeId', select: 'name' })
@@ -220,7 +236,7 @@ exports.updateSubmission = async (req, res) => {
                 submission.magazineName = null;
                 submission.DOI = null;
             }
-            
+
             if (req.files.attachment) {
                 deleteFile(submission.attachmentUrl);
                 submission.attachmentFile = req.files.attachment[0].originalname;

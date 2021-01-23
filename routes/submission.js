@@ -53,7 +53,6 @@ router.delete('/:submissionId',
 // Chief Editor Search Submisisons By Keyword
 router.get('/search/all',
     checkAuth,
-    restrict([USER_ROLES.CHIEF_EDITOR.permissionLevel]),
     submissionController.getSubmissionsByKeyword);
 
 module.exports = router;
