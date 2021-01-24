@@ -4,7 +4,7 @@ const SubmissionType = require('../model/submission_type');
 const Stage = require('../model/stage');
 const Notification = require('../model/notification');
 const { StatusCodes } = require('http-status-codes');
-const { STAGE, NOTIFICATION_TYPE } = require('../config/constant');
+const { STAGE, NOTIFICATION_TYPE, USER_ROLES } = require('../config/constant');
 const logTemplates = require('../utils/log-templates');
 
 const { deleteFile } = require('../services/file-services');
@@ -58,9 +58,25 @@ exports.getSubmissionsByAuthor = async (req, res) => {
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;
     const authorId = req.params.authorId;
+    // filter
+    const stageId = req.query.stageId || "";
+    const categoryId = req.query.categoryId || "";
+    const typeId = req.query.typeId || "";
+
+    const cond = { authorId };
+    if (categoryId !== "") {
+        Object.assign(cond, { categoryId });
+    }
+    if (stageId !== "") {
+        Object.assign(cond, { stageId });
+    }
+    if (typeId !== "") {
+        Object.assign(cond, { typeId });
+    }
+
     try {
-        const total = await Submission.countDocuments({ authorId: authorId });
-        const submissions = await Submission.find({ authorId: authorId })
+        const total = await Submission.countDocuments(cond);
+        const submissions = await Submission.find(cond)
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'categoryId', select: 'name' })
             .populate({ path: 'typeId', select: 'name' })
@@ -69,6 +85,7 @@ exports.getSubmissionsByAuthor = async (req, res) => {
             .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
             .exec();
+
         res.status(StatusCodes.OK).json({
             submissions: submissions,
             total: total,
@@ -297,10 +314,19 @@ exports.getSubmissionsByKeyword = async (req, res) => {
     const regex = new RegExp(req.query["keyword"], 'i');
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;
+
+    const cond = {
+        title: regex
+    }
+    const permissionLevel = req.user.role.permissionLevel;
+    if (permissionLevel === USER_ROLES.AUTHOR.permissionLevel) {
+        Object.assign(cond, { authorId: req.user.userId });
+    }
+
     try {
-        const total = await Submission.countDocuments({ title: regex });
+        const total = await Submission.countDocuments(cond);
         const submissions = await Submission
-            .find({ title: regex })
+            .find(cond)
             .populate({ path: 'authorId', select: 'firstname lastname' })
             .populate({ path: 'typeId', select: 'name' })
             .populate({ path: 'stageId', select: 'name value -_id' })

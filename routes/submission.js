@@ -18,7 +18,7 @@ router.get('/:submissionId',
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel, USER_ROLES.CHIEF_EDITOR.permissionLevel]),
     submissionController.getSubmissionById);
 
-// Author, Editor, Reviewer
+// Author get my list submissions, Editor, Reviewer
 router.get('/author/:authorId',
     checkAuth,
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
@@ -50,9 +50,10 @@ router.delete('/:submissionId',
     restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel]),
     submissionController.deleteSubmission);
 
-// Chief Editor Search Submisisons By Keyword
+// Chief Editor/Author Search Submisisons By Keyword
 router.get('/search/all',
     checkAuth,
+    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.CHIEF_EDITOR.permissionLevel]),
     submissionController.getSubmissionsByKeyword);
 
 module.exports = router;

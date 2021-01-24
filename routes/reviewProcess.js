@@ -23,7 +23,7 @@ router.get('/editor-assignments/:submissionId',
     checkAuth,
     reviewProcessController.getEditorAssignmentBySubmission);
 
-// Editor: get all submission and assignment that assigned
+// Editor: Get My Editor Assignments
 router.get('/editor-assignments/my/all',
     checkAuth,
     restrict([USER_ROLES.EDITOR.permissionLevel]),

@@ -4,13 +4,18 @@ const Comment = require('../model/comment');
 const Reply = require('../model/reply');
 const bluebird = require('bluebird');
 const mongoose = require('mongoose');
+const article = require('../model/article');
 
 exports.getAllArticles = async (req, res) => {
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;
+    //filter
+    const categoryId = req.query.categoryId || "";
+    const typeId = req.query.typeId || "";
+
     try {
-        const total = await Article.countDocuments();
-        const articles = await Article
+        let total = await Article.countDocuments();
+        let articles = await Article
             .find()
             .populate({
                 path: 'submissionId',
@@ -21,10 +26,32 @@ exports.getAllArticles = async (req, res) => {
                     { path: 'typeId', select: 'name' }
                 ]
             })
-            .skip((page - 1) * ITEMS_PER_PAGE)
-            .limit(ITEMS_PER_PAGE)
+            // .skip((page - 1) * ITEMS_PER_PAGE)
+            // .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
             .exec();
+
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        const limit = ITEMS_PER_PAGE;
+        if (typeId === "" && categoryId === "") {
+            articles = articles.slice(skip, skip + limit + 1);
+        } else {
+            let filter = [];
+            if (typeId !== "" && categoryId !== "") {
+                filter = articles.filter(a => a.submissionId.typeId._id.toString() === typeId
+                    && a.submissionId.categoryId._id.toString() === categoryId);
+            } else {
+                if (typeId !== "") {
+                    filter = articles.filter(a => a.submissionId.typeId._id.toString() === typeId);
+                }
+                if (categoryId !== "") {
+                    filter = articles.filter(a => a.submissionId.categoryId._id.toString() === categoryId);
+                }
+            }
+
+            total = filter.length;
+            articles = filter.slice(skip, skip + limit + 1);
+        }
 
         res.status(StatusCodes.OK).json({
             articles: articles,
@@ -38,6 +65,51 @@ exports.getAllArticles = async (req, res) => {
         });
     }
 };
+
+// exports.getAllArticles = async (req, res) => {
+//     const page = +req.query.page || 1;
+//     const ITEMS_PER_PAGE = +req.query.limit || 8;
+//     //filter
+//     const categoryId = req.query.categoryId || "";
+//     const typeId = req.query.typeId || "";
+
+//     try {
+//         let total = await Article.countDocuments();
+//         let articles = await Article
+//             .find()
+//             .populate({
+//                 path: 'submissionId',
+//                 select: '-stageId -submissionLogs',
+//                 populate: [
+//                     { path: 'authorId', select: 'firstname lastname biography avatar' },
+//                     { path: 'categoryId', select: 'name' },
+//                     { path: 'typeId', select: 'name' }
+//                 ]
+//             })
+//             .skip((page - 1) * ITEMS_PER_PAGE)
+//             .limit(ITEMS_PER_PAGE)
+//             .sort({ _id: -1 })
+//             .exec();
+
+//         if (typeId !== "") {
+//             articles = articles.filter(a => a.submissionId.typeId._id.toString() === typeId);
+//         }
+//         if (categoryId !== "") {
+//             articles = articles.filter(a => a.submissionId.categoryId._id.toString() === categoryId);
+//         }
+
+//         res.status(StatusCodes.OK).json({
+//             articles: articles,
+//             total: total,
+//             currentPage: page
+//         });
+//     } catch (err) {
+//         console.log(err);
+//         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//             error: "Internal Server Error."
+//         });
+//     }
+// };
 
 exports.getMostViewedArticles = async (req, res) => {
     const page = +req.query.page || 1;

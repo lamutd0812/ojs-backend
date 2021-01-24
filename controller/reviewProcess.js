@@ -349,6 +349,7 @@ exports.getMyEditorAssignments = async (req, res) => {
     const stageId = req.query.stageId || "";
     const categoryId = req.query.categoryId || "";
     const typeId = req.query.typeId || "";
+    const keyword = req.query.keyword || "";
 
     try {
         let editorAssignments = await EditorAssignment
@@ -393,6 +394,10 @@ exports.getMyEditorAssignments = async (req, res) => {
         if (stageId !== "") {
             editorAssignments = editorAssignments.filter(ea => ea.submissionId.stageId._id.toString() === stageId);
         }
+        if (keyword !== "") {
+            const regex = new RegExp(req.query["keyword"], 'i');
+            editorAssignments = editorAssignments.filter(ea => ea.submissionId.title.match(regex));
+        }
 
         res.status(StatusCodes.OK).json({
             editorAssignments: editorAssignments,
@@ -411,28 +416,50 @@ exports.getMyReviewerAssignments = async (req, res) => {
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;
     const reviewerId = req.user.userId;
+    // filter
+    const stageId = req.query.stageId || "";
+    const categoryId = req.query.categoryId || "";
+    const typeId = req.query.typeId || "";
+    const keyword = req.query.keyword || "";
+
     try {
-        const total = await ReviewerAssignment.countDocuments({ reviewerId: reviewerId });
-        const reviewerAssignments = await ReviewerAssignment
+        let reviewerAssignments = await ReviewerAssignment
             .find({ reviewerId: reviewerId })
             .populate({ path: 'reviewerId', select: 'firstname lastname' })
             .populate({ path: 'editorId', select: 'firstname lastname' })
             .populate({
                 path: 'submissionId',
-                select: 'title stageId authorId typeId',
+                select: 'title categoryId stageId authorId typeId',
                 populate: [
-                    { path: 'stageId', select: 'name value -_id' },
-                    { path: 'typeId', select: 'name -_id' },
+                    { path: 'categoryId', select: 'name' },
+                    { path: 'stageId', select: 'name value' },
+                    { path: 'typeId', select: 'name' },
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             })
             .skip((page - 1) * ITEMS_PER_PAGE)
             .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
+            .lean()
             .exec();
+
+        if (typeId !== "") {
+            reviewerAssignments = reviewerAssignments.filter(ra => ra.submissionId.typeId._id.toString() === typeId);
+        }
+        if (categoryId !== "") {
+            reviewerAssignments = reviewerAssignments.filter(ra => ra.submissionId.categoryId._id.toString() === categoryId);
+        }
+        if (stageId !== "") {
+            reviewerAssignments = reviewerAssignments.filter(ra => ra.submissionId.stageId._id.toString() === stageId);
+        }
+        if (keyword !== "") {
+            const regex = new RegExp(req.query["keyword"], 'i');
+            reviewerAssignments = reviewerAssignments.filter(ra => ra.submissionId.title.match(regex));
+        }
+
         res.status(StatusCodes.OK).json({
             reviewerAssignments: reviewerAssignments,
-            total: total,
+            total: reviewerAssignments.length,
             currentPage: page
         });
     } catch (err) {
