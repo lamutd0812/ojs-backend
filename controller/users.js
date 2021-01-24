@@ -161,4 +161,50 @@ exports.getAllPreferenceCategories = async (req, res) => {
             error: "Internal Server Error."
         });
     }
-}; 
+};
+
+exports.getAllUserInfor = async (req, res) => {
+    const page = +req.query.page || 1;
+    const ITEMS_PER_PAGE = +req.query.limit || 8;
+    try {
+        const total = await User.countDocuments();
+        const users = await User
+            .find()
+            .select(' -password')
+            .populate('role', 'name')
+            .populate('preferenceCategoryId')
+            .sort({ _id: -1 })
+            .skip((page - 1) * ITEMS_PER_PAGE)
+            .limit(ITEMS_PER_PAGE)
+            .lean()
+            .exec();
+
+        res.status(StatusCodes.OK).json({
+            users: users,
+            total: total,
+            currentPage: page
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Internal Server Error."
+        });
+    }
+};
+
+exports.changeUserRole = async (req, res) => {
+    const userId = req.params.userId;
+    const roleId = req.body.roleId;
+    try {
+        const updatedUser = await User.findByIdAndUpdate(userId, { role: roleId }, { new: true });
+        res.status(StatusCodes.OK).json({
+            message: "Phân quyền người dùng thành công!",
+            updatedUser: updatedUser
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "Internal Server Error."
+        });
+    }
+};

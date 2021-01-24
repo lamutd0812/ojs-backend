@@ -1,6 +1,7 @@
 const express = require('express');
+const { USER_ROLES } = require('../config/constant');
 const usersController = require('../controller/users');
-const { checkAuth } = require('../middlewares/check-auth');
+const { checkAuth, restrict } = require('../middlewares/check-auth');
 const { uploadImage } = require('../services/image-services');
 
 const router = express.Router();
@@ -26,5 +27,17 @@ router.put('/change-avatar',
 
 router.get('/all/preference-categories',
     usersController.getAllPreferenceCategories);
+
+// Admin get All User
+router.get('/infor/all',
+    checkAuth,
+    restrict([USER_ROLES.ADMIN.permissionLevel]),
+    usersController.getAllUserInfor);
+
+// Admin change user role
+router.put('/role/:userId',
+    checkAuth,
+    restrict([USER_ROLES.ADMIN.permissionLevel]),
+    usersController.changeUserRole);
 
 module.exports = router;
