@@ -66,51 +66,6 @@ exports.getAllArticles = async (req, res) => {
     }
 };
 
-// exports.getAllArticles = async (req, res) => {
-//     const page = +req.query.page || 1;
-//     const ITEMS_PER_PAGE = +req.query.limit || 8;
-//     //filter
-//     const categoryId = req.query.categoryId || "";
-//     const typeId = req.query.typeId || "";
-
-//     try {
-//         let total = await Article.countDocuments();
-//         let articles = await Article
-//             .find()
-//             .populate({
-//                 path: 'submissionId',
-//                 select: '-stageId -submissionLogs',
-//                 populate: [
-//                     { path: 'authorId', select: 'firstname lastname biography avatar' },
-//                     { path: 'categoryId', select: 'name' },
-//                     { path: 'typeId', select: 'name' }
-//                 ]
-//             })
-//             .skip((page - 1) * ITEMS_PER_PAGE)
-//             .limit(ITEMS_PER_PAGE)
-//             .sort({ _id: -1 })
-//             .exec();
-
-//         if (typeId !== "") {
-//             articles = articles.filter(a => a.submissionId.typeId._id.toString() === typeId);
-//         }
-//         if (categoryId !== "") {
-//             articles = articles.filter(a => a.submissionId.categoryId._id.toString() === categoryId);
-//         }
-
-//         res.status(StatusCodes.OK).json({
-//             articles: articles,
-//             total: total,
-//             currentPage: page
-//         });
-//     } catch (err) {
-//         console.log(err);
-//         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-//             error: "Internal Server Error."
-//         });
-//     }
-// };
-
 exports.getMostViewedArticles = async (req, res) => {
     const page = +req.query.page || 1;
     const ITEMS_PER_PAGE = +req.query.limit || 8;

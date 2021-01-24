@@ -1,9 +1,49 @@
 const Category = require('../model/category');
 const { StatusCodes } = require('http-status-codes');
 
+// exports.getAllCategories = async (req, res) => {
+//     try {
+//         const categories = await Category.find().select('name');
+//         res.status(StatusCodes.OK).json({ categories: categories });
+//     } catch (err) {
+//         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+//             error: "Internal Server Error."
+//         });
+//         console.log(err);
+//     }
+// }
+
 exports.getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find().select('name');
+        const categories = await Category.aggregate([
+            {
+                $lookup: {
+                    from: "submissions",
+                    localField: "_id",
+                    foreignField: "categoryId",
+                    as: "submissions"
+                }
+            },
+            {
+                $lookup: {
+                    from: "articles",
+                    localField: "submissions._id",
+                    foreignField: "submissionId",
+                    as: "articles"
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "name": 1,
+                    "views": 1,
+                    "downloaded": 1,
+                    // "articles": 1,
+                    "numberOfArticles": { $cond: { if: { $isArray: "$articles" }, then: { $size: "$articles" }, else: "NA"} }
+                }
+            },
+        ]);
+
         res.status(StatusCodes.OK).json({ categories: categories });
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

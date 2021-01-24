@@ -379,8 +379,8 @@ exports.getMyEditorAssignments = async (req, res) => {
                 ]
             })
             .populate('authorAssignmentId', 'authorRevisionId -_id')
-            .skip((page - 1) * ITEMS_PER_PAGE)
-            .limit(ITEMS_PER_PAGE)
+            // .skip((page - 1) * ITEMS_PER_PAGE)
+            // .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
             .lean()
             .exec();
@@ -398,6 +398,10 @@ exports.getMyEditorAssignments = async (req, res) => {
             const regex = new RegExp(req.query["keyword"], 'i');
             editorAssignments = editorAssignments.filter(ea => ea.submissionId.title.match(regex));
         }
+
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        const limit = ITEMS_PER_PAGE;
+        editorAssignments = editorAssignments.slice(skip, skip + limit + 1);
 
         res.status(StatusCodes.OK).json({
             editorAssignments: editorAssignments,
@@ -437,8 +441,8 @@ exports.getMyReviewerAssignments = async (req, res) => {
                     { path: 'authorId', select: 'firstname lastname' }
                 ]
             })
-            .skip((page - 1) * ITEMS_PER_PAGE)
-            .limit(ITEMS_PER_PAGE)
+            // .skip((page - 1) * ITEMS_PER_PAGE)
+            // .limit(ITEMS_PER_PAGE)
             .sort({ _id: -1 })
             .lean()
             .exec();
@@ -456,6 +460,10 @@ exports.getMyReviewerAssignments = async (req, res) => {
             const regex = new RegExp(req.query["keyword"], 'i');
             reviewerAssignments = reviewerAssignments.filter(ra => ra.submissionId.title.match(regex));
         }
+
+        const skip = (page - 1) * ITEMS_PER_PAGE;
+        const limit = ITEMS_PER_PAGE;
+        reviewerAssignments = reviewerAssignments.slice(skip, skip + limit + 1);
 
         res.status(StatusCodes.OK).json({
             reviewerAssignments: reviewerAssignments,
