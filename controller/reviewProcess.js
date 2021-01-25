@@ -874,7 +874,7 @@ exports.getAuthorAssignmentBySubmission = async (req, res) => {
     const permissionLevel = req.user.role.permissionLevel;
     try {
         let cond = {};
-        if (permissionLevel === USER_ROLES.AUTHOR.permissionLevel) {
+        if (permissionLevel === USER_ROLES.AUTHOR.permissionLevel || permissionLevel === USER_ROLES.REVIEWER.permissionLevel) {
             cond = { submissionId: submissionId, authorId: userId }
         } else if (permissionLevel === USER_ROLES.EDITOR.permissionLevel) {
             cond = { submissionId: submissionId, editorId: userId }

@@ -90,19 +90,20 @@ router.post('/request-author-revision/:submissionId',
 // Author and Editor get Author Assignment
 router.get('/author-assignment/:submissionId',
     checkAuth,
-    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.EDITOR.permissionLevel, USER_ROLES.CHIEF_EDITOR.permissionLevel]),
+    restrict([USER_ROLES.AUTHOR.permissionLevel,USER_ROLES.REVIEWER.permissionLevel, USER_ROLES.EDITOR.permissionLevel, USER_ROLES.CHIEF_EDITOR.permissionLevel]),
     reviewProcessController.getAuthorAssignmentBySubmission
 );
 
 // Author Submit Revision of a Submission
 router.put('/author-assignment/:submissionId',
     checkAuth,
-    restrict([USER_ROLES.AUTHOR.permissionLevel]),
+    restrict([USER_ROLES.AUTHOR.permissionLevel, USER_ROLES.EDITOR.permissionLevel, USER_ROLES.REVIEWER.permissionLevel,]),
     uploadFile.fields([
         { name: 'attachment', maxCount: 1 },
         { name: 'metadata', maxCount: 10 },
     ]),
-    reviewProcessController.authorSubmitRevision);
+    reviewProcessController.authorSubmitRevision
+);
 
 // Chief Editor Accept Submission
 router.put('/accept-submission/:submissionId',
