@@ -19,6 +19,7 @@ const logTemplates = require('../utils/log-templates');
 const { USER_ROLES, STAGE, CHIEF_EDITOR_DECISION, NOTIFICATION_TYPE, EDITOR_DECISION } = require('../config/constant');
 const bluebird = require('bluebird');
 const transporter = require('../utils/transporter');
+const io = require('../services/socket');
 
 const { deleteFile } = require('../services/file-services');
 
@@ -176,7 +177,13 @@ exports.assignEditor = async (req, res) => {
                 content: 'Tổng biên tập ' + req.user.fullname + ' đã chỉ định bạn chủ trì thẩm định một bài báo.',
                 link: '/dashboard/editor/assignment/' + submissionId
             });
-            await noti.save();
+            const savedNoti = await noti.save();
+
+            io.getIO().emit('noti', {
+                action: 'push-noti',
+                noti: savedNoti
+            });
+
 
             // send email to editor
             const emailSent = transporter.verify((error, success) => {

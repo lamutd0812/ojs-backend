@@ -48,8 +48,12 @@ mongoose.connect(config.DB_URI, {
     useFindAndModify: false,
     useCreateIndex: true
 }).then(resutl => {
-    app.listen(PORT);
+    const server = app.listen(PORT);
     console.log(`server running at port ${PORT}!`);
+    const io = require('./services/socket').init(server);
+    io.on('connection', socket => {
+        console.log('Socket.io client connected!');
+    });
 }).catch(err => {
-    console.log(err)
+    console.log(err);
 });
